@@ -1,7 +1,8 @@
 #pragma once
 #include <Eigen/Dense>
 
-class Particle {
+class Particle 
+{
 public:
     using Coord = Eigen::Vector2d;
     Particle() = default;

@@ -1,0 +1,30 @@
+#pragma once
+#include "./Face.h"
+#include <array>
+#include <Eigen/Dense>
+
+class Element 
+{
+public:
+    using Coord = Eigen::Vector2d;
+    Element() = default;
+    virtual ~Element() = default;
+
+    // Accessors
+    const Coord& getposition() const;
+    const double& getvolume() const;
+    const std::array<Face*, 4>& getfaces() const;
+    Face* getface(size_t index) const;
+    // Note: The index should be in the range [0, 3] for a 2D element
+    // Modifiers
+    void setposition(const Coord& position);
+    void setvolume(const double& volume);
+    void setface(size_t index, Face* face);
+
+protected:
+    Coord m_position; // Position of the element
+    double m_volume;  // Volume of the element
+    std::array<Face*, 4> m_faces; // Array of faces associated with the element, order is left, right, bottom, top
+    // Note: The size of the array should match the number of faces for the element type
+    // For example, a 2D quadrilateral element has 4 faces
+};
