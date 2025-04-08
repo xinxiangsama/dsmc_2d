@@ -28,11 +28,16 @@ public:
     void removeparticle(Particle* particle);
     void removeallparticles();
 
+    // collision
     virtual void collision();
+    // sample micro physics
+    virtual void sample();
 protected:
     Coord m_position;
     std::vector<Particle*> m_particles;
     std::unique_ptr<Phase> m_phase;
     std::unique_ptr<Element> m_element;
     std::vector<std::unique_ptr<Cell>> m_children;
+    size_t N_particles;
+    size_t N_collision;
 };

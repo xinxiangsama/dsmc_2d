@@ -1,4 +1,4 @@
-#include "cell.h"
+#include "Cell.h"
 
 const Cell::Coord &Cell::getposition() const
 {
@@ -58,6 +58,9 @@ void Cell::collision()
     }else{
         // collision is this cell
     }
+}
+void Cell::sample()
+{
 }
 Cell::~Cell()
 {
