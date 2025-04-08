@@ -18,4 +18,8 @@ public:
 protected:
     std::vector<std::unique_ptr<Cell>> m_cells;
     std::vector<std::unique_ptr<Particle>> m_particles;
+
+    /*parallel*/
+    int myid;
+    int numprocs;
 };
