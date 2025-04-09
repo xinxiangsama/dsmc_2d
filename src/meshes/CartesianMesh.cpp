@@ -9,6 +9,8 @@ void CartesianMesh::allocateCells(std::vector<std::unique_ptr<Cell>> &cells)
         for (int j = 0; j < m_numberCellsY; ++j)
         {
             cells.emplace_back(std::make_unique<Cell>());
+            auto &cell = cells.back();
+            cell->setindex(Eigen::Vector2d(i, j));
         }
     }
 }
@@ -40,8 +42,8 @@ void CartesianMesh::BindCellwithElement(std::vector<std::unique_ptr<Cell>> &cell
     {
         for (int j = 0; j < m_numberCellsY; ++j)
         {
-            auto &cell = cells[i + j * m_numberCellsX];
-            auto &element = m_elements[i + j * m_numberCellsX];
+            auto &cell = cells[j + i * m_numberCellsY];
+            auto &element = m_elements[j + i * m_numberCellsY];
             cell->setposition(element->getposition());
             cell->setelement(element.get());
         }
@@ -75,6 +77,8 @@ void CartesianMesh::BindElementwithFace()
         }
     }
 }
+
+
 
 void CartesianMesh::setnumberCellsX(const int &N)
 {

@@ -2,6 +2,7 @@
 #include "../particle/Particle.h"
 #include "../meshes/Element.h"
 #include "../variables/Phase.h"
+#include "../random/Random.h"
 #include <memory>
 #include <vector>
 
@@ -17,10 +18,12 @@ public:
     const std::vector<Particle*>& getparticles() const;
     const Phase* getphase() const;
     const Element* getelement() const;
+    const Coord& getindex() const;
     const std::vector<std::unique_ptr<Cell>>& getchildren() const;
     // Modifiers
     void setposition(const Coord& position);
     void setelement(Element* element);
+    void setindex(const Coord& index);
 
     // Functions
     void allocatevar();
@@ -34,6 +37,7 @@ public:
     virtual void sample();
 protected:
     Coord m_position;
+    Coord m_index;
     std::vector<Particle*> m_particles;
     std::unique_ptr<Phase> m_phase;
     Element* m_element;

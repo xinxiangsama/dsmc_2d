@@ -25,3 +25,13 @@ protected:
     Coord m_position;
     Coord m_velocity;
 };
+
+struct ParticleExchangeType
+{
+public:
+    double mass;
+    double x;
+    double y;
+    double u;
+    double v;
+};

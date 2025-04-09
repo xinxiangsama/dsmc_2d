@@ -16,6 +16,10 @@ const Element *Cell::getelement() const
 {
     return m_element;
 }
+const Cell::Coord &Cell::getindex() const
+{
+    return m_index;
+}
 const std::vector<std::unique_ptr<Cell>> &Cell::getchildren() const
 {
     return m_children;
@@ -27,6 +31,10 @@ void Cell::setposition(const Coord &position)
 void Cell::setelement(Element* element)
 {
     m_element = element;
+}
+void Cell::setindex(const Coord &index)
+{
+    m_index = index;
 }
 void Cell::allocatevar()
 {

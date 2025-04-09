@@ -18,6 +18,8 @@ SOURCES = \
 	./src/cell/Cell.cpp \
 	./src/meshes/Element.cpp  ./src/meshes/CartesianMesh.cpp \
 	./src/parallel/Parallel.cpp ./src/parallel/CartesianParallel.cpp \
+	./src/random/Random.cpp \
+	./src/boundary/WallBoundary.cpp ./src/boundary/OutflowBoundary.cpp\
 	
 
 # 定义目标文件

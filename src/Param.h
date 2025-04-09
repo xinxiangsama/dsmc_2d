@@ -1,11 +1,11 @@
 #pragma once
-#define PI 3.14159265
+#include <cmath>
 
 //==================物理参数=======================
 static constexpr double boltz = 1.3806e-23; // J/K 波尔兹曼常数
 static constexpr double mass = 6.63e-26; // mass argon 分子质量
 static constexpr double diam = 4.17e-10; // eff diam argon 分子直径
-static constexpr double Volume_Particle = PI * diam * diam; //分子的体积
+static constexpr double Volume_Particle = M_PI * diam * diam; //分子的体积
 static constexpr unsigned int N_Particle =6.4e6; //总模拟分子数
 static constexpr double tau = 5e-7; //时间步长（s） 需要小于分子平均碰撞频率
 static constexpr double Vtl = 0.81;
@@ -27,7 +27,8 @@ static constexpr unsigned int N1 = 100; //横向网格数
 static constexpr unsigned int N2 = 100; // 纵向网格数
 
 //=============一些constexper=========
-
+static constexpr double Volume = L1 * L2; //流场体积
+static constexpr size_t Fn = (Volume * Rho / mass) / N_Particle; //每个仿真分子代表的物理分子数
 
 
 //==============写出文件相关参数============

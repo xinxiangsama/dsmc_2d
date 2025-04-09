@@ -43,6 +43,65 @@ void CartesianParallel::setNeibours()
 
 }
 
+void CartesianParallel::exchangedata()
+{
+    MPI_Datatype MPI_Particle;
+    MPI_Type_contiguous(5, MPI_DOUBLE, &MPI_Particle);
+    MPI_Type_commit(&MPI_Particle);
+
+    std::vector<ParticleExchangeType> sendbuffer(m_sendbuffer.size());
+    auto sendnum = static_cast<int>(m_sendbuffer.size());
+    for(size_t i = 0; i < m_sendbuffer.size(); ++i){
+        sendbuffer[i].mass = m_sendbuffer[i]->getmass();
+        sendbuffer[i].x = m_sendbuffer[i]->getposition()(0);
+        sendbuffer[i].y = m_sendbuffer[i]->getposition()(1);
+        sendbuffer[i].u = m_sendbuffer[i]->getvelocity()(0);
+        sendbuffer[i].v = m_sendbuffer[i]->getvelocity()(1);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    for(int step = 1; step < numprocs; ++step){
+        int sendid = (myid + step) % numprocs;
+        int recvid = (myid - step + numprocs) % numprocs;
+
+        // exchange send num and store it
+        int recvnum;
+        MPI_Sendrecv(&sendnum, 1, MPI_INT, sendid, 0, &recvnum, 1, MPI_INT, recvid, 0, m_cartesian_comm, MPI_STATUS_IGNORE);
+        std::vector<ParticleExchangeType> recvbuffer(recvnum);
+        // exchange data
+        MPI_Sendrecv(sendbuffer.data(), sendnum, MPI_Particle, sendid, 1, recvbuffer.data(), recvnum, MPI_Particle, recvid, 1, m_cartesian_comm, MPI_STATUS_IGNORE);
+        // store the data
+        m_recvbuffer.reserve(m_recvbuffer.size() + recvnum);
+        for(int i = 0; i < recvnum; ++i){
+            // check if the particle is in the local domain
+            if(recvbuffer[i].x > m_mesh->getoffsetX() * m_mesh->getUnidX() &&
+            recvbuffer[i].x < (m_mesh->getnumberCellsX() + m_mesh->getoffsetX()) * m_mesh->getUnidX() &&
+            recvbuffer[i].y > m_mesh->getoffsetY() * m_mesh->getUnidY() &&
+            recvbuffer[i].y < (m_mesh->getnumberCellsY() + m_mesh->getoffsetY()) * m_mesh->getUnidY()){
+                auto particle = std::make_unique<Particle>();
+                particle->setmass(recvbuffer[i].mass);
+                Eigen::Vector2d position(recvbuffer[i].x, recvbuffer[i].y);
+                Eigen::Vector2d velocity(recvbuffer[i].u, recvbuffer[i].v);
+                particle->setposition(position);
+                particle->setvelocity(velocity);
+                m_recvbuffer.emplace_back(std::move(particle));
+            }
+        }
+    }
+}
+
+void CartesianParallel::setsendbuffer(std::vector<std::unique_ptr<Particle>> &sendbuffer)
+{
+    m_sendbuffer.insert(m_sendbuffer.end(), std::make_move_iterator(sendbuffer.begin()), std::make_move_iterator(sendbuffer.end()));
+    sendbuffer.clear();
+}
+
+void CartesianParallel::writerecvbuffer(std::vector<std::unique_ptr<Particle>> &m_particles)
+{
+    m_particles.insert(m_particles.end(), std::make_move_iterator(m_recvbuffer.begin()), std::make_move_iterator(m_recvbuffer.end()));
+    m_recvbuffer.clear();
+    m_sendbuffer.clear();
+}
+
 const int &CartesianParallel::getLeftNeibour()
 {
     return m_neighbours[0];
