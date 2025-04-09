@@ -21,7 +21,7 @@ const double &Element::getvolume() const
 {
     return m_volume;
 }
-const std::array<Face *, 4> &Element::getfaces() const
+const std::array<std::unique_ptr<Face>, 4> &Element::getfaces() const
 {
     return m_faces;
 }
@@ -29,7 +29,7 @@ Face *Element::getface(size_t index) const
 {
     if (index < m_faces.size())
     {
-        return m_faces[index];
+        return m_faces[index].get();
     }
     std::cerr << "Index out of bounds in getface: " << index << std::endl;
     return nullptr; // or throw an exception
@@ -50,10 +50,24 @@ void Element::setvolume(const double &volume)
 {
     m_volume = volume;
 }
-void Element::setface(size_t index, Face *face)
+void Element::setface(size_t index, std::unique_ptr<Face>&& face)
 {
     if (index < m_faces.size())
     {
-        m_faces[index] = face;
+        m_faces[index] = std::move(face);
+    }else
+    {
+        std::cerr << "Index out of bounds in setface: " << index << std::endl;
+    }
+}
+
+void Element::setface(size_t index, std::unique_ptr<Face> &face)
+{
+    if (index < m_faces.size())
+    {
+        m_faces[index] = std::move(face);
+    }else
+    {
+        std::cerr << "Index out of bounds in setface: " << index << std::endl;
     }
 }

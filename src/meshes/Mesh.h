@@ -9,7 +9,6 @@ public:
 
     virtual void allocateCells(std::vector<std::unique_ptr<Cell>>& cells) {};
     virtual void setelement() {};
-    virtual void setface() {};
     virtual void BindCellwithElement(std::vector<std::unique_ptr<Cell>>& cells) {};
     virtual void BindElementwithFace() {};
 
@@ -22,6 +21,8 @@ public:
     virtual void setnumberCpuY(const int&) {};
     virtual void setCpuCoordX(const int&) {};
     virtual void setCpuCoordY(const int&) {};
+    virtual void setoffsetX(const int&) {};
+    virtual void setoffsetY(const int&) {};
     virtual void setGlobalLengthX(const double&) {};
     virtual void setGlobalLengthY(const double&) {};
     virtual void setLocalLengthX(const double& ) {};
@@ -33,6 +34,10 @@ public:
     virtual const int& getnumberCellsY() {};
     virtual const double& getUnidX() {};
     virtual const double& getUnidY() {};
+    virtual const int& getnumberCpuX() {};
+    virtual const int& getnumberCpuY() {};
+    virtual const int& getCpuCoordX() {};
+    virtual const int& getCpuCoordY() {};
     virtual const int& getoffsetX() {};
     virtual const int& getoffsetY() {};
     virtual const double& getGlobalLengthX() {};

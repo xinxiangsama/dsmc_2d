@@ -8,7 +8,6 @@ public:
     ~CartesianMesh() = default;
     void allocateCells(std::vector<std::unique_ptr<Cell>>& cells) override;
     void setelement() override;
-    void setface() override;
     void BindCellwithElement(std::vector<std::unique_ptr<Cell>>& cells);
     void BindElementwithFace();
     // Modifiers
@@ -20,6 +19,8 @@ public:
     void setnumberCpuY(const int& N) override;
     void setCpuCoordX(const int& N) override;
     void setCpuCoordY(const int& N) override;
+    virtual void setoffsetX(const int&) override;
+    virtual void setoffsetY(const int&) override;
     void setGlobalLengthX(const double& L) override;
     void setGlobalLengthY(const double& L) override;
     void setLocalLengthX(const double& L) override;
@@ -31,6 +32,10 @@ public:
     const int& getnumberCellsY() override;
     const double& getUnidX() override;
     const double& getUnidY() override;
+    virtual const int& getnumberCpuX() override;
+    virtual const int& getnumberCpuY() override;
+    virtual const int& getCpuCoordX() override;
+    virtual const int& getCpuCoordY() override;
     const int& getoffsetX() override;
     const int& getoffsetY() override;
     const double& getGlobalLengthX() override;
@@ -46,8 +51,8 @@ protected:
     double m_GlobalLengthY = 0.0; // length of the global domain in y direction
     double m_LocalLengthX = 0.0; // length of the local domain in x direction
     double m_LocalLengthY = 0.0; // length of the local domain in y direction
-    int m_offsetX = 0; // offset in x direction for the local domain
-    int m_offsetY = 0; // offset in y direction for the local domain
+    int m_offsetX = 0; // offset in x direction for the local domain unit is cell
+    int m_offsetY = 0; // offset in y direction for the local domain unit is cell
     int m_numberCpuX = 1; // number of processors in x direction
     int m_numberCpuY = 1; // number of processors in y direction
     int m_CpuCoordX = 0; // coordinate of the processor in x direction
@@ -58,5 +63,4 @@ protected:
     std::vector<double> m_dYj; // vector of cell lengths in y direction
 
     std::vector<std::unique_ptr<Element>> m_elements; // vector of elements
-    std::vector<std::unique_ptr<Face>> m_faces; // vector of faces
 };

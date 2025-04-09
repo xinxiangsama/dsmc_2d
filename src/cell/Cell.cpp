@@ -14,7 +14,7 @@ const Phase *Cell::getphase() const
 }
 const Element *Cell::getelement() const
 {
-    return m_element.get();
+    return m_element;
 }
 const std::vector<std::unique_ptr<Cell>> &Cell::getchildren() const
 {
@@ -24,9 +24,9 @@ void Cell::setposition(const Coord &position)
 {
     m_position = position;
 }
-void Cell::setelement(std::unique_ptr<Element> element)
+void Cell::setelement(Element* element)
 {
-    m_element = std::move(element);
+    m_element = element;
 }
 void Cell::allocatevar()
 {

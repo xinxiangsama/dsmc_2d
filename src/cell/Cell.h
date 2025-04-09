@@ -20,7 +20,7 @@ public:
     const std::vector<std::unique_ptr<Cell>>& getchildren() const;
     // Modifiers
     void setposition(const Coord& position);
-    void setelement(std::unique_ptr<Element> element);
+    void setelement(Element* element);
 
     // Functions
     void allocatevar();
@@ -36,7 +36,7 @@ protected:
     Coord m_position;
     std::vector<Particle*> m_particles;
     std::unique_ptr<Phase> m_phase;
-    std::unique_ptr<Element> m_element;
+    Element* m_element;
     std::vector<std::unique_ptr<Cell>> m_children;
     size_t N_particles;
     size_t N_collision;

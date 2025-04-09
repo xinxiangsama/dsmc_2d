@@ -15,6 +15,7 @@ public:
     const int& getRightNeibour() override;
     const int& getTopNeibour() override;
     const int& getBottomNeibour() override;
+    void info() override;
 protected:
     std::array<int, 4> m_neighbours; // left, right, bottom, top
     MPI_Comm m_cartesian_comm;

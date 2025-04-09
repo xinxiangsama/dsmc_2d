@@ -4,7 +4,9 @@
 #include <vector>
 #include <iostream>
 #include <Eigen/Dense>
-#include "./cell/Cell.h"
+#include "parallel/CartesianParallel.h"
+#include "meshes/CartesianMesh.h"
+#include "cell/Cell.h"
 
 class Run
 {
@@ -14,6 +16,7 @@ public:
 
     /*============Initialize==========*/
     void initialize(int argc, char** argv);
+    void finalize();
 
 protected:
     std::vector<std::unique_ptr<Cell>> m_cells;
@@ -22,4 +25,7 @@ protected:
     /*parallel*/
     int myid;
     int numprocs;
+    std::unique_ptr<Parallel> m_parallel;
+    /*mesh*/
+    std::unique_ptr<Mesh> m_mesh;
 };

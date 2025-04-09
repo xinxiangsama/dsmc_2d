@@ -11,10 +11,6 @@ static constexpr double tau = 5e-7; //时间步长（s） 需要小于分子平�
 static constexpr double Vtl = 0.81;
 static constexpr double VSS_coe = 1.0; 
 
-
-double gamma_function(double xlen);
-static double VHS_coe = gamma_function(2.5 - Vtl);
-
 //=================流场参数========================
 static constexpr double L1 = 4.0e-2; //横向维度 (m)
 static constexpr double L2 = 4.0e-2; //纵向维度 (m)

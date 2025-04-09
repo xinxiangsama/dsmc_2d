@@ -20,6 +20,7 @@ public:
     virtual const int& getRightNeibour() {};
     virtual const int& getTopNeibour() {};
     virtual const int& getBottomNeibour() {};
+    virtual void info() {};
 protected:
     Mesh* m_mesh = nullptr;
     int myid = 0;
