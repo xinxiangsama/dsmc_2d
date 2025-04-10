@@ -1,5 +1,6 @@
 #pragma once
 #include <Eigen/Dense>
+#include "../random/Random.h"
 
 class Particle 
 {
@@ -20,6 +21,7 @@ public:
     void setvelocity(const Coord& velocity);
     // Functions
     virtual void Move(const double& dt);
+    virtual void Collision(Particle* other);
 protected:
     double m_mass;
     Coord m_position;

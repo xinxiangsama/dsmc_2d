@@ -9,8 +9,10 @@
 #include "boundary/WallBoundary.h"
 #include "boundary/OutflowBoundary.h"
 #include "boundary/InflowBoundary.h"
+#include "io/Output.h"
 #include "cell/Cell.h"
 
+class Output;
 class Run
 {
 public:
@@ -29,7 +31,7 @@ public:
     void ressignParticle();
     void collision();
     Cell* locatecell(const Particle::Coord& position);
-    void fillsendbuffer(std::vector<std::unique_ptr<Particle>>& sendbuffer);
+    void assignParticle2cell();
 
 protected:
     std::vector<std::unique_ptr<Cell>> m_cells;
@@ -46,4 +48,9 @@ protected:
     std::unique_ptr<Boundary> outlet;
     std::unique_ptr<Boundary> wall1; // bottom wall
     std::unique_ptr<Boundary> wall2; // top wall
+
+    /*output*/
+    std::unique_ptr<Output> m_output;
+
+    friend class Output;
 };

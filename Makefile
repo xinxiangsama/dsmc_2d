@@ -20,6 +20,7 @@ SOURCES = \
 	./src/parallel/Parallel.cpp ./src/parallel/CartesianParallel.cpp \
 	./src/random/Random.cpp \
 	./src/boundary/WallBoundary.cpp ./src/boundary/OutflowBoundary.cpp\
+	./src/io/Output.cpp \
 	
 
 # 定义目标文件
@@ -43,12 +44,7 @@ build/%.o: %.cpp
 # 清理规则
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
-	rm -f DSMC_OUT/*.csv
-	rm -f DSMC_OUT/*.json
-	rm -f ./force_data.csv
-	rm -f ./*.json
-	rm -rf ./*.txt
-	rm -rf ./run/*.h5
+	rm -rf ./res/*.h5
 
 # 防止make自动生成*.o文件的规则
 .PHONY: all clean

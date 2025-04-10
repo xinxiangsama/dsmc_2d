@@ -11,6 +11,7 @@ public:
     void modifygenerator(std::mt19937 &generator);
     void modifygenerator(const int& rd);
     double getrandom01();
+    int getrandomint(const int& min, const int& max);
 
     Eigen::Vector2d MaxwellDistribution(const double& Vstd);
 

@@ -20,6 +20,12 @@ double Random::getrandom01()
     return m_dist01(m_mt19937);  // Use the distribution
 }
 
+int Random::getrandomint(const int &min, const int &max)
+{
+    std::uniform_int_distribution<int> dist(min, max);
+    return dist(m_mt19937);  // Use the distribution
+}
+
 Eigen::Vector2d Random::MaxwellDistribution(const double &Vstd)
 {
     auto rd1 = getrandom01();

@@ -1,4 +1,7 @@
 #include "Particle.h"
+#include <memory>
+
+extern std::unique_ptr<Random> randomgenerator;
 
 const double &Particle::getmass()
 {
@@ -29,4 +32,20 @@ void Particle::setvelocity(const Coord &velocity)
 void Particle::Move(const double &dt)
 {
     m_position += m_velocity * dt;
+}
+
+void Particle::Collision(Particle *other)
+{
+    auto v_mean = (m_velocity + other->getvelocity()) * 0.5;
+    auto v_rel_mag = (m_velocity - other->getvelocity()).norm();
+    auto rand01 = randomgenerator->getrandom01();
+    auto cos_theta = 2.0 * rand01 - 1.0;
+    auto sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
+    rand01 = randomgenerator->getrandom01();
+    auto phi = 2.0 * M_PI * rand01;
+
+    auto v_rel = v_rel_mag * Eigen::Vector2d(cos_theta, sin_theta * std::cos(phi));
+
+    m_velocity = v_mean + v_rel * 0.5;
+    other->setvelocity(v_mean - v_rel * 0.5);
 }

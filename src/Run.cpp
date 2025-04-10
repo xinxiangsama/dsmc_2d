@@ -1,7 +1,29 @@
 #include "Run.h"
+#include <chrono>
 double Vstd;
 double Vmax;
+double VHS_coe;
 std::unique_ptr<Random> randomgenerator;
+
+auto GammaFun = [](double xlen){
+    double A, ylen, GAM;
+    
+    A = 1.0;
+    ylen = xlen;
+    
+    if (ylen < 1.0) {
+        A = A / ylen;
+    } else {
+        while (ylen >= 1.0) {
+            ylen = ylen - 1;
+            A = A * ylen;
+        }
+    }
+    
+    GAM = A * (1.0 - 0.5748 * ylen + 0.9512 * ylen * ylen - 0.6998 * ylen * ylen * ylen + 0.4245 * ylen * ylen * ylen * ylen - 0.1010 * ylen * ylen * ylen * ylen * ylen);
+    
+    return GAM;
+};
 
 
 void Run::initialize(int argc, char **argv)
@@ -9,6 +31,7 @@ void Run::initialize(int argc, char **argv)
     /*cal base var*/
     Vstd = sqrt(2 * boltz * T / mass);
     Vmax = 2 * sqrt(8 / M_PI) * Vstd;
+    VHS_coe = GammaFun(2.5 - Vtl);
 
     /*mesh part*/
     m_mesh = std::make_unique<CartesianMesh>();
@@ -44,8 +67,27 @@ void Run::initialize(int argc, char **argv)
 
     /*random part*/
     randomgenerator = std::make_unique<Random>();
+    /*output part*/
+    m_output = std::make_unique<Output>(this);
     /*Initial particle phase*/
     assignParticle();
+    for(auto& cell : m_cells){
+        cell->allocatevar();
+    }
+
+
+    for(auto& cell : m_cells){
+        cell->sample();
+    }
+    m_output->Write2HDF5("./res/init.h5");
+    if(myid == 0){
+        std::cout << "MPI Initialized" << std::endl;
+        std::cout << "Mesh Initialized" << std::endl;
+        std::cout << "Parallel Initialized" << std::endl;
+        std::cout << "Boundary Initialized" << std::endl;
+        std::cout << "Random Initialized" << std::endl;
+        std::cout << "Output Initialized" << std::endl;
+    }
 }
 
 void Run::assignParticle()
@@ -67,7 +109,7 @@ void Run::assignParticle()
             double y = cell->getposition()(1) + (ry - 0.5) * m_mesh->getUnidY();
             particle->setposition(Eigen::Vector2d(x, y));
             auto velocity = randomgenerator->MaxwellDistribution(Vstd);
-            velocity(0) += V_jet;
+            // velocity(0) += V_jet;
             particle->setvelocity(velocity);
             m_particles.emplace_back(std::move(particle));
             cell->insertparticle(m_particles.back().get());
@@ -77,9 +119,6 @@ void Run::assignParticle()
 
 void Run::particlemove()
 {   
-    if(myid == 0){
-        std::cout <<"particle position before move" << m_particles[1]->getposition()<<std::endl;
-    }
 
     for(auto& particle : m_particles){
         particle->Move(tau);
@@ -99,14 +138,13 @@ void Run::particlemove()
         }
 
     }
-
-    if(myid == 0){
-        std::cout <<"particle position after move" << m_particles[1]->getposition()<<std::endl;
-    }
 }
 
 void Run::ressignParticle()
 {   
+    for(auto& cell : m_cells){
+        cell->removeallparticles();
+    }
     std::vector<std::unique_ptr<Particle>> particle_out;
     std::vector<std::unique_ptr<Particle>> particle_in;
     particle_out.reserve(m_particles.size());
@@ -123,13 +161,42 @@ void Run::ressignParticle()
         }
     }
 
-    std::cout <<"particle_out size" << particle_out.size() << std::endl;
-    std::cout <<"particle_in size" << particle_in.size() << std::endl;
 
     m_particles.clear();
     m_particles.insert(m_particles.end(), std::make_move_iterator(particle_in.begin()), std::make_move_iterator(particle_in.end()));
+    auto start_sendbuffer = std::chrono::high_resolution_clock::now();
     m_parallel->setsendbuffer(particle_out);
+    auto end_sendbuffer = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_sendbuffer = end_sendbuffer - start_sendbuffer;
+
+    auto start_exchangedata = std::chrono::high_resolution_clock::now();
     m_parallel->exchangedata();
+    auto end_exchangedata = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_exchangedata = end_exchangedata - start_exchangedata;
+
+    auto start_writerecvbuffer = std::chrono::high_resolution_clock::now();
+    m_parallel->writerecvbuffer(m_particles);
+    auto end_writerecvbuffer = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_writerecvbuffer = end_writerecvbuffer - start_writerecvbuffer;
+
+    auto start_assignParticle2cell = std::chrono::high_resolution_clock::now();
+    assignParticle2cell();
+    auto end_assignParticle2cell = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_assignParticle2cell = end_assignParticle2cell - start_assignParticle2cell;
+
+    // if(myid == 0) {
+    //     std::cout << "Time taken for setsendbuffer: " << elapsed_sendbuffer.count() << " seconds" << std::endl;
+    //     std::cout << "Time taken for exchangedata: " << elapsed_exchangedata.count() << " seconds" << std::endl;
+    //     std::cout << "Time taken for writerecvbuffer: " << elapsed_writerecvbuffer.count() << " seconds" << std::endl;
+    //     std::cout << "Time taken for assignParticle2cell: " << elapsed_assignParticle2cell.count() << " seconds" << std::endl;
+    // }
+}
+
+void Run::collision()
+{
+    for(auto& cell : m_cells){
+        cell->collision();
+    }
 }
 
 Cell* Run::locatecell(const Particle::Coord& position)
@@ -144,10 +211,40 @@ Cell* Run::locatecell(const Particle::Coord& position)
     return m_cells[j + i * m_mesh->getnumberCellsY()].get();
 }
 
+void Run::assignParticle2cell()
+{
+    for(auto& particle : m_particles){
+        auto position = particle->getposition();
+        auto cell = locatecell(position);
+        if(cell != nullptr){
+            cell->insertparticle(particle.get());
+        }
+    }
+}
+
 void Run::solver()
 {
-    particlemove();
-    ressignParticle();
+    for(size_t iter = 0; iter < 1000; ++iter){
+        if(myid == 0){
+            std::cout << "iter: " << iter << std::endl;
+        }
+        particlemove();
+        // collision();
+        ressignParticle();
+        if (iter % 100 == 0) {
+            for(auto& cell : m_cells){
+                cell->sample();
+            }
+            m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
+        }
+    }
+    if(myid == 0){
+        std::cout << "Simulation Finished" << std::endl;
+    }
+    m_output->Write2HDF5("./res/final.h5");
+    if(myid == 0){
+        std::cout << "Output Finished" << std::endl;
+    }
 }
 
 void Run::finalize()
