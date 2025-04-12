@@ -16,3 +16,4 @@ private:
     Particle::Coord m_normal;  // normal
     bool m_diffuse;            // if diffuse
 };
+ 

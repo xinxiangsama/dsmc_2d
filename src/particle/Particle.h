@@ -5,7 +5,7 @@
 class Particle 
 {
 public:
-    using Coord = Eigen::Vector2d;
+    using Coord = Eigen::Vector3d;
     Particle() = default;
     Particle(const double& mass, const Coord& position, const Coord& velocity)
         : m_mass(mass), m_position(position), m_velocity(velocity) {}
@@ -34,6 +34,8 @@ public:
     double mass;
     double x;
     double y;
+    double z;
     double u;
     double v;
+    double w;
 };

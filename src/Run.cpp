@@ -25,20 +25,41 @@ auto GammaFun = [](double xlen){
     return GAM;
 };
 
+double ComputeCollisionTime(Particle& particle)
+{
+    double a = particle.getvelocity()[0] * particle.getvelocity()[0] + particle.getvelocity()[1] * particle.getvelocity()[1];
+    double b = 2 * (particle.getvelocity()[0] * (particle.getposition()[0] - Center_x) + particle.getvelocity()[1] * (particle.getposition()[1] - Center_y));
+    double c = (particle.getposition()[0] - Center_x) * (particle.getposition()[0] - Center_x) + (particle.getposition()[1] - Center_y) * (particle.getposition()[1] - Center_y) - Radius * Radius;
+    double delta = b * b - 4 * a * c;
+    if(delta < 0){
+        std::cout <<"粒子不会与圆柱碰撞"<<std::endl;
+        std::cout <<"delta = "<<delta<<std::endl;
+        return -1;
+    }else{
+        double t1 = (-b + sqrt(delta)) / (2 * a);
+        double t2 = (-b - sqrt(delta)) / (2 * a);
+        return std::min(t1, t2);
+    }
 
+}
 void Run::initialize(int argc, char **argv)
 {   
     /*cal base var*/
     Vstd = sqrt(2 * boltz * T / mass);
     Vmax = 2 * sqrt(8 / M_PI) * Vstd;
     VHS_coe = GammaFun(2.5 - Vtl);
+    // if(myid == 0){
+    //     std::cout <<VHS_coe<<std::endl;
+    // }
 
     /*mesh part*/
     m_mesh = std::make_unique<CartesianMesh>();
     m_mesh->setGlobalLengthX(L1);
     m_mesh->setGlobalLengthY(L2);
+    m_mesh->setGlobalLengthZ(L3);
     m_mesh->setnumberCellsXGlobal(N1);
     m_mesh->setnumberCellsYGlobal(N2);
+    m_mesh->setnumberCellsZGlobal(N3);
 
 
     /*parallel part*/
@@ -60,11 +81,15 @@ void Run::initialize(int argc, char **argv)
 
     /*boundary part*/
     bool ifdisfuse = false;
-    inlet = std::make_unique<WallBoundary>(Eigen::Vector2d(0.0, L2 * 0.5), Eigen::Vector2d(1.0, 0.0), ifdisfuse);
-    outlet = std::make_unique<WallBoundary>(Eigen::Vector2d(L1, L2 * 0.5), Eigen::Vector2d(-1.0, 0.0), ifdisfuse);
-    wall1 = std::make_unique<WallBoundary>(Eigen::Vector2d(L1 * 0.5, 0.0), Eigen::Vector2d(0.0, 1.0), ifdisfuse);
-    wall2 = std::make_unique<WallBoundary>(Eigen::Vector2d(L1 * 0.5, L2), Eigen::Vector2d(0.0, -1.0), ifdisfuse);
-
+    inlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), 0, L1);
+    outlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), 0, L1);
+    wall1 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.0, 0.5 * L3), Eigen::Vector3d(0.0, 1.0, 0.0), ifdisfuse);
+    wall2 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, L2, 0.5 * L3), Eigen::Vector3d(0.0, -1.0, 0.0), ifdisfuse);
+    // wall3 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, 0.0), Eigen::Vector3d(0.0, 0.0, 1.0), ifdisfuse);
+    // wall4 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, L3), Eigen::Vector3d(0.0, 0.0, -1.0), ifdisfuse);
+    wall3 = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, 0.0), Eigen::Vector3d(0.0, 0.0, 1.0), 2, L3);
+    wall4 = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, L3), Eigen::Vector3d(0.0, 0.0, -1.0), 2, L3);
+    
     /*random part*/
     randomgenerator = std::make_unique<Random>();
     /*output part*/
@@ -74,7 +99,6 @@ void Run::initialize(int argc, char **argv)
     for(auto& cell : m_cells){
         cell->allocatevar();
     }
-
 
     for(auto& cell : m_cells){
         cell->sample();
@@ -94,25 +118,31 @@ void Run::assignParticle()
 {
     numparticlelocal = N_Particle / numprocs;
     m_particles.reserve(numparticlelocal);
-    if(N_Particle % N1 * N2 != 0){
+    if(N_Particle % (N1 * N2 * N3) != 0){
         std::cerr <<"particle can't be devided by mesh" << std::endl;
     }
-    
-    auto numparticlepercell = numparticlelocal / (m_mesh->getnumberCellsX() * m_mesh->getnumberCellsY());
+    std::random_device rd;
+    auto numparticlepercell = numparticlelocal / (m_mesh->getnumberCellsX() * m_mesh->getnumberCellsY() * m_mesh->getnumberCellsZ());
     for(auto& cell: m_cells){
+        std::mt19937 gen(rd() + cell->getindex()[0] + cell->getindex()[1] + cell->getindex()[2]);
         for(int i = 0; i < numparticlepercell; ++i){
-            auto particle = std::make_unique<Particle>();
+            auto particle = std::make_shared<Particle>();
             particle->setmass(mass);
-            auto rx = randomgenerator->getrandom01();
-            auto ry = randomgenerator->getrandom01();
+            // auto rx = randomgenerator->getrandom01();
+            // auto ry = randomgenerator->getrandom01();
+            // auto rz = randomgenerator->getrandom01();
+            double rx = {std::uniform_real_distribution<double>(0, 1)(gen)};
+            double ry = {std::uniform_real_distribution<double>(0, 1)(gen)};
+            double rz = {std::uniform_real_distribution<double>(0, 1)(gen)};
             double x = cell->getposition()(0) + (rx - 0.5) * m_mesh->getUnidX();
             double y = cell->getposition()(1) + (ry - 0.5) * m_mesh->getUnidY();
-            particle->setposition(Eigen::Vector2d(x, y));
+            double z = cell->getposition()(2) + (rz - 0.5) * m_mesh->getUnidZ();
+            particle->setposition(Eigen::Vector3d(x, y, z));
             auto velocity = randomgenerator->MaxwellDistribution(Vstd);
-            // velocity(0) += V_jet;
+            velocity(0) += V_jet;
             particle->setvelocity(velocity);
-            m_particles.emplace_back(std::move(particle));
-            cell->insertparticle(m_particles.back().get());
+            m_particles.push_back(particle);
+            cell->insertparticle(particle);
         }
     }
 }
@@ -121,7 +151,38 @@ void Run::particlemove()
 {   
 
     for(auto& particle : m_particles){
+        Particle old_particle = *particle;
         particle->Move(tau);
+
+
+         // 手动实现圆柱绕流
+         double distance_x = Center_x - particle->getposition()[0];
+         double distance_y = Center_y - particle->getposition()[1];
+
+         double OP = sqrt(pow(distance_x, 2) + pow(distance_y,2));
+         if(pow(distance_x, 2) + pow(distance_y,2) < Radius * Radius){ //与圆柱碰撞
+            double t = ComputeCollisionTime(old_particle);
+            double Collision_x = old_particle.getposition()[0] + old_particle.getvelocity()[0] * t;
+            double Collision_y = old_particle.getposition()[1] + old_particle.getvelocity()[1] * t;
+            //计算碰撞位置圆周的法向量
+            double NormalVector_x = Collision_x - Center_x;
+            double NormalVector_y = Collision_y - Center_y;
+            double ModuleOfNormalVector = sqrt(NormalVector_x * NormalVector_x + NormalVector_y * NormalVector_y);
+            NormalVector_x = NormalVector_x / ModuleOfNormalVector;
+            NormalVector_y = NormalVector_y / ModuleOfNormalVector;
+            double Vn = abs(particle->getvelocity()[0] * NormalVector_x + particle->getvelocity()[1] * NormalVector_y);
+            double Vnx = Vn * NormalVector_x;
+            double Vny = Vn * NormalVector_y;
+            
+            double Vtx = particle->getvelocity()[0] + Vnx;
+            double Vty = particle->getvelocity()[1] + Vny;
+
+            particle->setvelocity({Vnx + Vtx, Vny + Vty, 0.0});
+
+            particle->setposition({Collision_x + particle->getvelocity()[0] * (tau - t), Collision_y + particle->getvelocity()[1] * (tau - t), 0.0});
+         }
+
+
 
         if(inlet->isHit(particle->getposition())){
             inlet->Reflect(particle.get(), tau);
@@ -137,6 +198,38 @@ void Run::particlemove()
             wall2->Reflect(particle.get(), tau);
         }
 
+        if(wall3->isHit(particle->getposition())){
+            wall3->Reflect(particle.get(), tau);
+        }
+        if(wall4->isHit(particle->getposition())){
+            wall4->Reflect(particle.get(), tau);
+        }
+
+        
+        // /*手动实现周期性边界 用于测试*/
+        // if(particle->getposition()(0) < 0.0){
+        //     auto x = fmod(particle->getposition()(0), L1) + L1;
+        //     particle->setposition(Eigen::Vector3d(x, particle->getposition()(1), particle->getposition()(2))); 
+        // }else if(particle->getposition()(0) > L1){
+        //     auto x = fmod(particle->getposition()(0), L1);
+        //     particle->setposition(Eigen::Vector3d(x, particle->getposition()(1), particle->getposition()(2))); 
+        // }
+        // if(particle->getposition()(1) < 0.0){
+        //     auto y = fmod(particle->getposition()(1), L2) + L2;
+        //     particle->setposition(Eigen::Vector3d(particle->getposition()(0), y, particle->getposition()(2)));
+        // }else if(particle->getposition()(1) > L2){
+        //     auto y = fmod(particle->getposition()(1), L2);
+        //     particle->setposition(Eigen::Vector3d(particle->getposition()(0), y, particle->getposition()(2)));
+        // }
+        // if(particle->getposition()(2) < 0.0){
+        //     auto z = fmod(particle->getposition()(2), L3) + L3;
+        //     particle->setposition(Eigen::Vector3d(particle->getposition()(0), particle->getposition()(1), z));
+        // }else if(particle->getposition()(2) > L3){
+        //     auto z = fmod(particle->getposition()(2), L3);
+        //     particle->setposition(Eigen::Vector3d(particle->getposition()(0), particle->getposition()(1), z));
+        // }
+
+
     }
 }
 
@@ -145,8 +238,8 @@ void Run::ressignParticle()
     for(auto& cell : m_cells){
         cell->removeallparticles();
     }
-    std::vector<std::unique_ptr<Particle>> particle_out;
-    std::vector<std::unique_ptr<Particle>> particle_in;
+    std::vector<std::shared_ptr<Particle>> particle_out;
+    std::vector<std::shared_ptr<Particle>> particle_in;
     particle_out.reserve(m_particles.size());
     particle_in.reserve(m_particles.size());
     for(auto& particle : m_particles){
@@ -155,47 +248,47 @@ void Run::ressignParticle()
         position(0) > (m_mesh->getnumberCellsX() + m_mesh->getoffsetX()) * m_mesh->getUnidX()|| 
         position(1) < m_mesh->getoffsetY() * m_mesh->getUnidY() || 
         position(1) > (m_mesh->getnumberCellsY() + m_mesh->getoffsetY()) * m_mesh->getUnidY()){
-            particle_out.emplace_back(std::move(particle));
+            particle_out.push_back(particle);
         }else{
-            particle_in.emplace_back(std::move(particle));
+            particle_in.push_back(particle);
         }
     }
 
 
     m_particles.clear();
-    m_particles.insert(m_particles.end(), std::make_move_iterator(particle_in.begin()), std::make_move_iterator(particle_in.end()));
-    auto start_sendbuffer = std::chrono::high_resolution_clock::now();
+    m_particles.insert(m_particles.end(), particle_in.begin(), particle_in.end());;
     m_parallel->setsendbuffer(particle_out);
-    auto end_sendbuffer = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_sendbuffer = end_sendbuffer - start_sendbuffer;
 
-    auto start_exchangedata = std::chrono::high_resolution_clock::now();
     m_parallel->exchangedata();
-    auto end_exchangedata = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_exchangedata = end_exchangedata - start_exchangedata;
 
-    auto start_writerecvbuffer = std::chrono::high_resolution_clock::now();
     m_parallel->writerecvbuffer(m_particles);
-    auto end_writerecvbuffer = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_writerecvbuffer = end_writerecvbuffer - start_writerecvbuffer;
 
-    auto start_assignParticle2cell = std::chrono::high_resolution_clock::now();
     assignParticle2cell();
-    auto end_assignParticle2cell = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_assignParticle2cell = end_assignParticle2cell - start_assignParticle2cell;
 
-    // if(myid == 0) {
-    //     std::cout << "Time taken for setsendbuffer: " << elapsed_sendbuffer.count() << " seconds" << std::endl;
-    //     std::cout << "Time taken for exchangedata: " << elapsed_exchangedata.count() << " seconds" << std::endl;
-    //     std::cout << "Time taken for writerecvbuffer: " << elapsed_writerecvbuffer.count() << " seconds" << std::endl;
-    //     std::cout << "Time taken for assignParticle2cell: " << elapsed_assignParticle2cell.count() << " seconds" << std::endl;
-    // }
+    int N_particle_local = m_particles.size();
+    int N_particle_global {};
+    MPI_Reduce(&N_particle_local, &N_particle_global, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (myid == 0) {
+        std::cout << "Total number of particles: " << N_particle_global << std::endl;
+    }
 }
 
 void Run::collision()
 {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::random_device rd01;
+    std::mt19937 gen01(rd01());
+    int Ncollision_local {};
     for(auto& cell : m_cells){
-        cell->collision();
+        cell->collision(gen, gen01);
+        Ncollision_local += cell->getCollisionNum();
+    }
+
+    int Ncollision_global {};
+    MPI_Reduce(&Ncollision_local, &Ncollision_global, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (myid == 0) {
+        std::cout << "Total number of collisions: " << Ncollision_global << std::endl;
     }
 }
 
@@ -203,12 +296,21 @@ Cell* Run::locatecell(const Particle::Coord& position)
 {
     auto i = static_cast<int>(position(0) / m_mesh->getUnidX()) - m_mesh->getoffsetX();
     auto j = static_cast<int>(position(1) / m_mesh->getUnidY()) - m_mesh->getoffsetY();
+    auto k = static_cast<int>(position(2) / m_mesh->getUnidZ());
+    // k = std::max(0, std::min(k, m_mesh->getnumberCellsZ() - 1));
     if(i < 0 || i >= m_mesh->getnumberCellsX() || j < 0 || j >= m_mesh->getnumberCellsY()){
-        std::cerr << "particle out of range" << std::endl;
+        std::cerr << "particle out of range at position: (" 
+              << position(0) << ", " 
+              << position(1) << ", " 
+              << position(2) << ")" << std::endl;
         return nullptr;
     }
 
-    return m_cells[j + i * m_mesh->getnumberCellsY()].get();
+    if(Eigen::Vector3d{i,j,k} != m_cells[k + j * m_mesh->getnumberCellsZ() + i * m_mesh->getnumberCellsY() * m_mesh->getnumberCellsZ()]->getindex()){
+        std::cerr <<"error!"<<std::endl;
+    }
+
+    return m_cells[k + j * m_mesh->getnumberCellsZ() + i * m_mesh->getnumberCellsY() * m_mesh->getnumberCellsZ()].get();
 }
 
 void Run::assignParticle2cell()
@@ -217,19 +319,19 @@ void Run::assignParticle2cell()
         auto position = particle->getposition();
         auto cell = locatecell(position);
         if(cell != nullptr){
-            cell->insertparticle(particle.get());
+            cell->insertparticle(particle);
         }
     }
 }
 
 void Run::solver()
 {
-    for(size_t iter = 0; iter < 1000; ++iter){
+    for(size_t iter = 0; iter < 10000; ++iter){
         if(myid == 0){
             std::cout << "iter: " << iter << std::endl;
         }
         particlemove();
-        // collision();
+        collision();
         ressignParticle();
         if (iter % 100 == 0) {
             for(auto& cell : m_cells){

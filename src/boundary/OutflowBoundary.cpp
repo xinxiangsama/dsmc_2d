@@ -1,8 +1,7 @@
 #include "OutflowBoundary.h"
 
-OutflowBoundary::OutflowBoundary(const Particle::Coord &point, const Particle::Coord &normal) : m_point(point), m_normal(normal)
+OutflowBoundary::OutflowBoundary(const Particle::Coord &point, const Particle::Coord &normal) : m_point(point), m_normal(normal.normalized())
 {
-    m_normal.normalized();
 }
 
 bool OutflowBoundary::isHit(const Particle::Coord &position) const
@@ -14,5 +13,5 @@ bool OutflowBoundary::isHit(const Particle::Coord &position) const
 
 void OutflowBoundary::Reflect(Particle *particle, const double& dt) const
 {
-    particle->setvelocity(Eigen::Vector2d(0.0, 0.0));
+    particle->setvelocity(Eigen::Vector3d(0.0, 0.0, 0.0));
 }

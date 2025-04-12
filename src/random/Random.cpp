@@ -26,12 +26,20 @@ int Random::getrandomint(const int &min, const int &max)
     return dist(m_mt19937);  // Use the distribution
 }
 
-Eigen::Vector2d Random::MaxwellDistribution(const double &Vstd)
+Eigen::Vector3d Random::MaxwellDistribution(const double &Vstd)
 {
     auto rd1 = getrandom01();
     auto rd2 = getrandom01();
 
     auto u = sqrt(-log(rd1)) * sin(2 * M_PI * rd2) * Vstd;
-    auto v = sqrt(-log(rd1)) * cos(2 * M_PI * rd2) * Vstd;
-    return Eigen::Vector2d(u, v);
+
+    rd1 = getrandom01();
+    rd2 = getrandom01();
+    auto v = sqrt(-log(rd1)) * sin(2 * M_PI * rd2) * Vstd;
+
+    rd1 = getrandom01();
+    rd2 = getrandom01();
+    auto w = sqrt(-log(rd1)) * sin(2 * M_PI * rd2) * Vstd;
+    
+    return Eigen::Vector3d(u, v, w);
 }

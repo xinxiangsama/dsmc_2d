@@ -40,11 +40,11 @@ void Particle::Collision(Particle *other)
     auto v_rel_mag = (m_velocity - other->getvelocity()).norm();
     auto rand01 = randomgenerator->getrandom01();
     auto cos_theta = 2.0 * rand01 - 1.0;
-    auto sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
+    auto sin_theta = sqrt(1.0 - cos_theta * cos_theta);
     rand01 = randomgenerator->getrandom01();
     auto phi = 2.0 * M_PI * rand01;
 
-    auto v_rel = v_rel_mag * Eigen::Vector2d(cos_theta, sin_theta * std::cos(phi));
+    auto v_rel = v_rel_mag * Eigen::Vector3d(cos_theta, sin_theta * cos(phi), sin_theta * sin(phi));
 
     m_velocity = v_mean + v_rel * 0.5;
     other->setvelocity(v_mean - v_rel * 0.5);

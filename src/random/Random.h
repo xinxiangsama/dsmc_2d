@@ -13,7 +13,7 @@ public:
     double getrandom01();
     int getrandomint(const int& min, const int& max);
 
-    Eigen::Vector2d MaxwellDistribution(const double& Vstd);
+    Eigen::Vector3d MaxwellDistribution(const double& Vstd);
 
 protected:
     std::random_device m_rd;   // Random device for seeding

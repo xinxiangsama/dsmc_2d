@@ -4,7 +4,7 @@
 class Phase
 {
 public:
-    using Coord = Eigen::Vector2d;
+    using Coord = Eigen::Vector3d;
     Phase() = default;
     virtual ~Phase() = default;
 

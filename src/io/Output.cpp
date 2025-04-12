@@ -31,12 +31,14 @@ void Output::Write2HDF5(const std::string &filename)
 
     H5::DataSet dataset_U = file.createDataSet("U", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
     H5::DataSet dataset_V = file.createDataSet("V", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
+    H5::DataSet dataset_W = file.createDataSet("W", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
     H5::DataSet dataset_P = file.createDataSet("P", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
     H5::DataSet dataset_T = file.createDataSet("T", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
     H5::DataSet dataset_Rho = file.createDataSet("Rho", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
 
     std::vector<double> U(N1local * N2local, 0.0);
     std::vector<double> V(N1local * N2local, 0.0);
+    std::vector<double> W(N1local * N2local, 0.0);
     std::vector<double> P(N1local * N2local, 0.0);
     std::vector<double> T(N1local * N2local, 0.0);
     std::vector<double> Rho(N1local * N2local, 0.0);
@@ -46,8 +48,9 @@ void Output::Write2HDF5(const std::string &filename)
             auto phase = cell->getphase();
             auto element = cell->getelement();
 
-            U[i * N2local + j] = phase->getvelocity().x();
-            V[i * N2local + j] = phase->getvelocity().y();
+            U[i * N2local + j] = phase->getvelocity()[0];
+            V[i * N2local + j] = phase->getvelocity()[1];
+            W[i * N2local + j] = phase->getvelocity()[2];
             P[i * N2local + j] = phase->getpressure();
             T[i * N2local + j] = phase->gettemperature();
             Rho[i * N2local + j] = phase->getdensity();
@@ -56,6 +59,7 @@ void Output::Write2HDF5(const std::string &filename)
 
     dataset_U.write(U.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);
     dataset_V.write(V.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);
+    dataset_W.write(W.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);
     dataset_P.write(P.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);
     dataset_T.write(T.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);
     dataset_Rho.write(Rho.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);

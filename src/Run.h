@@ -9,6 +9,7 @@
 #include "boundary/WallBoundary.h"
 #include "boundary/OutflowBoundary.h"
 #include "boundary/InflowBoundary.h"
+#include "boundary/PeriodicBoundary.h"
 #include "io/Output.h"
 #include "cell/Cell.h"
 
@@ -35,7 +36,7 @@ public:
 
 protected:
     std::vector<std::unique_ptr<Cell>> m_cells;
-    std::vector<std::unique_ptr<Particle>> m_particles;
+    std::vector<std::shared_ptr<Particle>> m_particles;
     size_t numparticlelocal;
 
     /*parallel*/
@@ -48,6 +49,8 @@ protected:
     std::unique_ptr<Boundary> outlet;
     std::unique_ptr<Boundary> wall1; // bottom wall
     std::unique_ptr<Boundary> wall2; // top wall
+    std::unique_ptr<Boundary> wall3; // front wall
+    std::unique_ptr<Boundary> wall4; // back wall
 
     /*output*/
     std::unique_ptr<Output> m_output;

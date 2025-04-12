@@ -4,7 +4,7 @@
 class Face
 {
 public:
-    using Coord = Eigen::Vector2d;
+    using Coord = Eigen::Vector3d;
     Face() = default;
     Face(const Coord& position, const Coord& normal)
         : m_position(position), m_normal(normal) {}

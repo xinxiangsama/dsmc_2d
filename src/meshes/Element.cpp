@@ -16,12 +16,15 @@ const double &Element::getL2() const
 {
     return m_L2;
 }
-
+const double &Element::getL3() const
+{
+    return m_L3;
+}
 const double &Element::getvolume() const
 {
     return m_volume;
 }
-const std::array<std::unique_ptr<Face>, 4> &Element::getfaces() const
+const std::array<std::unique_ptr<Face>, 6> &Element::getfaces() const
 {
     return m_faces;
 }
@@ -45,6 +48,10 @@ void Element::setL1(const double &L1)
 void Element::setL2(const double &L2)
 {
     m_L2 = L2;
+}
+void Element::setL3(const double &L3)
+{
+    m_L3 = L3;
 }
 void Element::setvolume(const double &volume)
 {
