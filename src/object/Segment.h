@@ -1,5 +1,6 @@
 #pragma once
 #include "./Largrangian.h"
+#include "particle/Particle.h"
 class LargrangianPoint;
 class Segment
 {
@@ -7,6 +8,8 @@ public:
 using Coord = LargrangianPoint::Coord;
     Segment() = default;
 
+    virtual bool isHit(const Particle::Coord& position) const;
+    virtual void Reflect(Particle* particle, const double& dt) const;
     // Access
     const double& getlength() const;
     const Coord& getsloop() const;

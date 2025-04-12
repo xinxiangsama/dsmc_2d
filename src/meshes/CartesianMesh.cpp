@@ -100,7 +100,18 @@ void CartesianMesh::BindElementwithFace()
     }
 }
 
+void CartesianMesh::cutcell(Geom *geom)
+{   
+    int cutcell_num {};
+    for(auto& element:m_elements){
+        geom->SortSegment2Element(element.get());
+        if(element->getsegments().size()){
+            cutcell_num++;
+        }
+    }
 
+    std::cout <<"cut cell num is : "<<cutcell_num<<std::endl;
+}
 
 void CartesianMesh::setnumberCellsX(const int &N)
 {

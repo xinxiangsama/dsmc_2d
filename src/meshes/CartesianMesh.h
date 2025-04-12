@@ -10,6 +10,7 @@ public:
     void setelement() override;
     void BindCellwithElement(std::vector<std::unique_ptr<Cell>>& cells);
     void BindElementwithFace();
+    virtual void cutcell(Geom* geom);
     // Modifiers
     void setnumberCellsX(const int& N) override;
     void setnumberCellsY(const int& N) override;

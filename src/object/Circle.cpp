@@ -23,8 +23,8 @@ void Circle::Initialize()
     {
         m_segments[i].setleftpoint(&m_points[i]);
         m_segments[i].setrightpoint(&m_points[(i + 1) % numLagrangianPoints]);
-        m_points[i].setLeftSegment(&m_segments[i]);
-        m_points[i].setRightSegment(&m_segments[(i + 1) % numLagrangianPoints]);
+        m_points[i].setLeftSegment(&m_segments[(i - 1 + numLagrangianPoints)%numLagrangianPoints]);
+        m_points[i].setRightSegment(&m_segments[i]);
     }
 
     // Set the information of each segment
@@ -33,6 +33,6 @@ void Circle::Initialize()
         auto vector = segment.getrightpoint()->getPosition() - segment.getleftpoint()->getPosition();
         segment.setlength(vector.norm());
         segment.setsloop(vector.normalized());
-        segment.setnormal(Eigen::Vector3d(-vector.y(), vector.x(), 0).normalized());
+        segment.setnormal(Eigen::Vector3d(vector.y(), -vector.x(), 0).normalized());
     }
 }

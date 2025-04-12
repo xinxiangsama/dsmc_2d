@@ -37,6 +37,14 @@ Face *Element::getface(size_t index) const
     std::cerr << "Index out of bounds in getface: " << index << std::endl;
     return nullptr; // or throw an exception
 }
+const std::vector<Segment *> &Element::getsegments() const
+{
+    return m_segments;
+}
+bool Element::ifcut()
+{
+    return m_segments.size() != 0; // if not zero, means it has been cut;
+}
 void Element::setposition(const Coord &position)
 {
     m_position = position;
@@ -77,4 +85,9 @@ void Element::setface(size_t index, std::unique_ptr<Face> &face)
     {
         std::cerr << "Index out of bounds in setface: " << index << std::endl;
     }
+}
+
+void Element::insertsegment(Segment *segment)
+{
+    m_segments.push_back(segment);
 }

@@ -12,6 +12,7 @@
 #include "boundary/PeriodicBoundary.h"
 #include "io/Output.h"
 #include "cell/Cell.h"
+#include "object/Circle.h"
 
 class Output;
 class Run
@@ -45,6 +46,7 @@ protected:
     std::unique_ptr<Parallel> m_parallel;
     /*mesh*/
     std::unique_ptr<Mesh> m_mesh;
+    std::unique_ptr<Geom> m_geom;
     std::unique_ptr<Boundary> inlet;
     std::unique_ptr<Boundary> outlet;
     std::unique_ptr<Boundary> wall1; // bottom wall

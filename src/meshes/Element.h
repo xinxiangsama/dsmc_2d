@@ -1,8 +1,9 @@
 #pragma once
-#include "./Face.h"
+#include "Face.h"
 #include <array>
 #include <memory>
 #include <Eigen/Dense>
+#include "object/Segment.h"
 
 class Element 
 {
@@ -19,6 +20,8 @@ public:
     const double& getvolume() const;
     const std::array<std::unique_ptr<Face>, 6>& getfaces() const;
     Face* getface(size_t index) const;
+    const std::vector<Segment*>& getsegments() const;
+    bool ifcut();
     // Note: The index should be in the range [0, 3] for a 2D element
     // Modifiers
     void setposition(const Coord& position);
@@ -28,6 +31,7 @@ public:
     void setvolume(const double& volume);
     void setface(size_t index, std::unique_ptr<Face>&& face);
     void setface(size_t index, std::unique_ptr<Face>& face);
+    void insertsegment(Segment* segment);
 
 protected:
     Coord m_position; // Position of the element
@@ -38,4 +42,5 @@ protected:
     std::array<std::unique_ptr<Face>, 6> m_faces; // Array of faces associated with the element, order is left, right, bottom, top
     // Note: The size of the array should match the number of faces for the element type
     // For example, a 2D quadrilateral element has 4 faces
+    std::vector<Segment*> m_segments;
 };

@@ -34,6 +34,10 @@ const int Cell::getCollisionNum()
 {
     return N_collision;
 }
+bool Cell::ifcut()
+{
+    return m_element->ifcut();
+}
 void Cell::setposition(const Coord &position)
 {
     m_position = position;

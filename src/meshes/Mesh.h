@@ -1,5 +1,6 @@
 #pragma once
 #include "../cell/Cell.h"
+#include "object/Geom.h"
 
 class Mesh
 {
@@ -11,6 +12,7 @@ public:
     virtual void setelement() {};
     virtual void BindCellwithElement(std::vector<std::unique_ptr<Cell>>& cells) {};
     virtual void BindElementwithFace() {};
+    virtual void cutcell(Geom* geom) {};
 
     // Modify
     virtual void setnumberCellsX(const int&) {};

@@ -7,7 +7,7 @@ static constexpr double mass = 6.63e-26; // mass argon 分子质量
 static constexpr double diam = 4.17e-10; // eff diam argon 分子直径
 static constexpr double Volume_Particle = M_PI * diam * diam; //分子的体积
 static constexpr unsigned int N_Particle =6.4e6; //总模拟分子数
-static constexpr double tau = 1e-7; //时间步长（s） 需要小于分子平均碰撞频率
+static constexpr double tau = 4e-8; //时间步长（s） 需要小于分子平均碰撞频率
 static constexpr double Vtl = 0.81;
 static constexpr double VSS_coe = 1.0; 
 
@@ -19,13 +19,13 @@ static constexpr double Rho= 1.0e-4 ; // 流场密度 kg/m^3
 static constexpr double T = 273.0; // temperature (K)
 
 //=================圆柱参数========================
-static constexpr double Radius = 2.0e-3; //圆柱半径
+static constexpr double Radius = 1.0e-2; //圆柱半径
 static constexpr double Center_x = 2.0e-2; //圆柱中心横坐标
 static constexpr double Center_y = 2.0e-2; //圆柱中心纵坐标
 static constexpr double V_jet = 0.0;//来流速度
 //===============正交结构网格==================
-static constexpr unsigned int N1 = 400; //横向网格数
-static constexpr unsigned int N2 = 400; // 纵向网格数
+static constexpr unsigned int N1 = 200; //横向网格数
+static constexpr unsigned int N2 = 200; // 纵向网格数
 static constexpr unsigned int N3 = 1; // 纵向网格数
 
 //=============一些constexper=========

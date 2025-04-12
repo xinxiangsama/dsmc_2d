@@ -21,6 +21,7 @@ public:
     const Coord& getindex() const;
     const std::vector<std::unique_ptr<Cell>>& getchildren() const;
     const int getCollisionNum();
+    bool ifcut();
     // Modifiers
     void setposition(const Coord& position);
     void setelement(Element* element);

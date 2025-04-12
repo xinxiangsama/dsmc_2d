@@ -31,10 +31,6 @@ void Run::initialize(int argc, char **argv)
     Vstd = sqrt(2 * boltz * T / mass);
     Vmax = 2 * sqrt(8 / M_PI) * Vstd;
     VHS_coe = GammaFun(2.5 - Vtl);
-    // if(myid == 0){
-    //     std::cout <<VHS_coe<<std::endl;
-    // }
-
     /*mesh part*/
     m_mesh = std::make_unique<CartesianMesh>();
     m_mesh->setGlobalLengthX(L1);
@@ -44,6 +40,8 @@ void Run::initialize(int argc, char **argv)
     m_mesh->setnumberCellsYGlobal(N2);
     m_mesh->setnumberCellsZGlobal(N3);
 
+    m_geom = std::make_unique<Circle>(50, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    m_geom->Initialize();
 
     /*parallel part*/
     MPI_Init(&argc, &argv);
@@ -61,13 +59,13 @@ void Run::initialize(int argc, char **argv)
     m_mesh->setelement();
     m_mesh->BindElementwithFace();
     m_mesh->BindCellwithElement(m_cells);
-
+    m_mesh->cutcell(m_geom.get());
     /*boundary part*/
     bool ifdisfuse = false;
-    // inlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), 0, L1);
-    // outlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), 0, L1);
-    inlet = std::make_unique<WallBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), ifdisfuse);
-    outlet = std::make_unique<WallBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), ifdisfuse);
+    inlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), 0, L1);
+    outlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), 0, L1);
+    // inlet = std::make_unique<WallBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), ifdisfuse);
+    // outlet = std::make_unique<WallBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), ifdisfuse);
     wall1 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.0, 0.5 * L3), Eigen::Vector3d(0.0, 1.0, 0.0), ifdisfuse);
     wall2 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, L2, 0.5 * L3), Eigen::Vector3d(0.0, -1.0, 0.0), ifdisfuse);
     // wall3 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, 0.0), Eigen::Vector3d(0.0, 0.0, 1.0), ifdisfuse);
@@ -122,6 +120,9 @@ void Run::assignParticle()
             double x = cell->getposition()(0) + (rx - 0.5) * m_mesh->getUnidX();
             double y = cell->getposition()(1) + (ry - 0.5) * m_mesh->getUnidY();
             double z = cell->getposition()(2) + (rz - 0.5) * m_mesh->getUnidZ();
+            if((x - Center_x) * (x - Center_x) + (y - Center_y) * (y - Center_y) < Radius * Radius){
+                continue;
+            }
             particle->setposition(Eigen::Vector3d(x, y, z));
             auto velocity = randomgenerator->MaxwellDistribution(Vstd);
             velocity(0) += V_jet;
@@ -134,32 +135,66 @@ void Run::assignParticle()
 
 void Run::particlemove()
 {   
+    // for(auto& particle : m_particles){
+    //     particle->Move(tau);
 
-    for(auto& particle : m_particles){
-        Particle old_particle = *particle;
-        particle->Move(tau);
+    //     if(inlet->isHit(particle->getposition())){
+    //         inlet->Reflect(particle.get(), tau);
+    //     }
+    //     if(outlet->isHit(particle->getposition())){
+    //         outlet->Reflect(particle.get(), tau);
+    //     }
 
-        if(inlet->isHit(particle->getposition())){
-            inlet->Reflect(particle.get(), tau);
-        }
-        if(outlet->isHit(particle->getposition())){
-            outlet->Reflect(particle.get(), tau);
-        }
+    //     if(wall1->isHit(particle->getposition())){
+    //         wall1->Reflect(particle.get(), tau);
+    //     }
+    //     if(wall2->isHit(particle->getposition())){
+    //         wall2->Reflect(particle.get(), tau);
+    //     }
 
-        if(wall1->isHit(particle->getposition())){
-            wall1->Reflect(particle.get(), tau);
-        }
-        if(wall2->isHit(particle->getposition())){
-            wall2->Reflect(particle.get(), tau);
-        }
+    //     if(wall3->isHit(particle->getposition())){
+    //         wall3->Reflect(particle.get(), tau);
+    //     }
+    //     if(wall4->isHit(particle->getposition())){
+    //         wall4->Reflect(particle.get(), tau);
+    //     }
 
-        if(wall3->isHit(particle->getposition())){
-            wall3->Reflect(particle.get(), tau);
-        }
-        if(wall4->isHit(particle->getposition())){
-            wall4->Reflect(particle.get(), tau);
-        }
+    // }
 
+    for(auto& cell : m_cells){
+        for(auto& particle : cell->getparticles()){
+            particle->Move(tau);
+
+            if(cell->ifcut()){
+                for(auto& sgement : cell->getelement()->getsegments()){
+                    if(sgement->isHit(particle->getposition())){
+                        sgement->Reflect(particle.get(), tau);
+                        break;
+                    }
+                }
+            }
+
+            if(inlet->isHit(particle->getposition())){
+                inlet->Reflect(particle.get(), tau);
+            }
+            if(outlet->isHit(particle->getposition())){
+                outlet->Reflect(particle.get(), tau);
+            }
+
+            if(wall1->isHit(particle->getposition())){
+                wall1->Reflect(particle.get(), tau);
+            }
+            if(wall2->isHit(particle->getposition())){
+                wall2->Reflect(particle.get(), tau);
+            }
+
+            if(wall3->isHit(particle->getposition())){
+                wall3->Reflect(particle.get(), tau);
+            }
+            if(wall4->isHit(particle->getposition())){
+                wall4->Reflect(particle.get(), tau);
+            }
+        }
     }
 }
 
@@ -259,7 +294,7 @@ void Run::solver()
         particlemove();
         collision();
         ressignParticle();
-        if (iter % 100 == 0) {
+        if (iter % 50 == 0) {
             for(auto& cell : m_cells){
                 cell->sample();
             }
