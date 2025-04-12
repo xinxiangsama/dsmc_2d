@@ -36,16 +36,21 @@ void Particle::Move(const double &dt)
 
 void Particle::Collision(Particle *other)
 {
-    auto v_mean = (m_velocity + other->getvelocity()) * 0.5;
-    auto v_rel_mag = (m_velocity - other->getvelocity()).norm();
-    auto rand01 = randomgenerator->getrandom01();
-    auto cos_theta = 2.0 * rand01 - 1.0;
-    auto sin_theta = sqrt(1.0 - cos_theta * cos_theta);
-    rand01 = randomgenerator->getrandom01();
-    auto phi = 2.0 * M_PI * rand01;
+    Particle::Coord v_mean = static_cast<Particle::Coord>(0.5 * (m_velocity + other->getvelocity()));
+    Particle::Coord v_rel = static_cast<Particle::Coord>(m_velocity - other->getvelocity());
+    auto v_rel_mag = v_rel.norm();
+    auto cosr = 2.0 * randomgenerator->getrandom01() - 1.0;
+    auto sinr = sqrt(1.0 - cosr * cosr);
+    auto phi = 2.0 * M_PI * randomgenerator->getrandom01();
 
-    auto v_rel = v_rel_mag * Eigen::Vector3d(cos_theta, sin_theta * cos(phi), sin_theta * sin(phi));
+    Particle::Coord vrel_new(
+        cosr,
+        sinr * cos(phi),
+        sinr * sin(phi)
+    );
 
-    m_velocity = v_mean + v_rel * 0.5;
-    other->setvelocity(v_mean - v_rel * 0.5);
+    vrel_new = vrel_new.normalized() * v_rel_mag;
+
+    m_velocity = v_mean + 0.5 * vrel_new;
+    other->setvelocity(v_mean - 0.5 * vrel_new);
 }

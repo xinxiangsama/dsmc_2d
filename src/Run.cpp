@@ -25,23 +25,6 @@ auto GammaFun = [](double xlen){
     return GAM;
 };
 
-double ComputeCollisionTime(Particle& particle)
-{
-    double a = particle.getvelocity()[0] * particle.getvelocity()[0] + particle.getvelocity()[1] * particle.getvelocity()[1];
-    double b = 2 * (particle.getvelocity()[0] * (particle.getposition()[0] - Center_x) + particle.getvelocity()[1] * (particle.getposition()[1] - Center_y));
-    double c = (particle.getposition()[0] - Center_x) * (particle.getposition()[0] - Center_x) + (particle.getposition()[1] - Center_y) * (particle.getposition()[1] - Center_y) - Radius * Radius;
-    double delta = b * b - 4 * a * c;
-    if(delta < 0){
-        std::cout <<"粒子不会与圆柱碰撞"<<std::endl;
-        std::cout <<"delta = "<<delta<<std::endl;
-        return -1;
-    }else{
-        double t1 = (-b + sqrt(delta)) / (2 * a);
-        double t2 = (-b - sqrt(delta)) / (2 * a);
-        return std::min(t1, t2);
-    }
-
-}
 void Run::initialize(int argc, char **argv)
 {   
     /*cal base var*/
@@ -81,8 +64,10 @@ void Run::initialize(int argc, char **argv)
 
     /*boundary part*/
     bool ifdisfuse = false;
-    inlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), 0, L1);
-    outlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), 0, L1);
+    // inlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), 0, L1);
+    // outlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), 0, L1);
+    inlet = std::make_unique<WallBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), ifdisfuse);
+    outlet = std::make_unique<WallBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), ifdisfuse);
     wall1 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.0, 0.5 * L3), Eigen::Vector3d(0.0, 1.0, 0.0), ifdisfuse);
     wall2 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, L2, 0.5 * L3), Eigen::Vector3d(0.0, -1.0, 0.0), ifdisfuse);
     // wall3 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, 0.0), Eigen::Vector3d(0.0, 0.0, 1.0), ifdisfuse);
@@ -128,12 +113,12 @@ void Run::assignParticle()
         for(int i = 0; i < numparticlepercell; ++i){
             auto particle = std::make_shared<Particle>();
             particle->setmass(mass);
-            // auto rx = randomgenerator->getrandom01();
-            // auto ry = randomgenerator->getrandom01();
-            // auto rz = randomgenerator->getrandom01();
-            double rx = {std::uniform_real_distribution<double>(0, 1)(gen)};
-            double ry = {std::uniform_real_distribution<double>(0, 1)(gen)};
-            double rz = {std::uniform_real_distribution<double>(0, 1)(gen)};
+            auto rx = randomgenerator->getrandom01();
+            auto ry = randomgenerator->getrandom01();
+            auto rz = randomgenerator->getrandom01();
+            // double rx = {std::uniform_real_distribution<double>(0, 1)(gen)};
+            // double ry = {std::uniform_real_distribution<double>(0, 1)(gen)};
+            // double rz = {std::uniform_real_distribution<double>(0, 1)(gen)};
             double x = cell->getposition()(0) + (rx - 0.5) * m_mesh->getUnidX();
             double y = cell->getposition()(1) + (ry - 0.5) * m_mesh->getUnidY();
             double z = cell->getposition()(2) + (rz - 0.5) * m_mesh->getUnidZ();
@@ -153,36 +138,6 @@ void Run::particlemove()
     for(auto& particle : m_particles){
         Particle old_particle = *particle;
         particle->Move(tau);
-
-
-         // 手动实现圆柱绕流
-         double distance_x = Center_x - particle->getposition()[0];
-         double distance_y = Center_y - particle->getposition()[1];
-
-         double OP = sqrt(pow(distance_x, 2) + pow(distance_y,2));
-         if(pow(distance_x, 2) + pow(distance_y,2) < Radius * Radius){ //与圆柱碰撞
-            double t = ComputeCollisionTime(old_particle);
-            double Collision_x = old_particle.getposition()[0] + old_particle.getvelocity()[0] * t;
-            double Collision_y = old_particle.getposition()[1] + old_particle.getvelocity()[1] * t;
-            //计算碰撞位置圆周的法向量
-            double NormalVector_x = Collision_x - Center_x;
-            double NormalVector_y = Collision_y - Center_y;
-            double ModuleOfNormalVector = sqrt(NormalVector_x * NormalVector_x + NormalVector_y * NormalVector_y);
-            NormalVector_x = NormalVector_x / ModuleOfNormalVector;
-            NormalVector_y = NormalVector_y / ModuleOfNormalVector;
-            double Vn = abs(particle->getvelocity()[0] * NormalVector_x + particle->getvelocity()[1] * NormalVector_y);
-            double Vnx = Vn * NormalVector_x;
-            double Vny = Vn * NormalVector_y;
-            
-            double Vtx = particle->getvelocity()[0] + Vnx;
-            double Vty = particle->getvelocity()[1] + Vny;
-
-            particle->setvelocity({Vnx + Vtx, Vny + Vty, 0.0});
-
-            particle->setposition({Collision_x + particle->getvelocity()[0] * (tau - t), Collision_y + particle->getvelocity()[1] * (tau - t), 0.0});
-         }
-
-
 
         if(inlet->isHit(particle->getposition())){
             inlet->Reflect(particle.get(), tau);
@@ -204,31 +159,6 @@ void Run::particlemove()
         if(wall4->isHit(particle->getposition())){
             wall4->Reflect(particle.get(), tau);
         }
-
-        
-        // /*手动实现周期性边界 用于测试*/
-        // if(particle->getposition()(0) < 0.0){
-        //     auto x = fmod(particle->getposition()(0), L1) + L1;
-        //     particle->setposition(Eigen::Vector3d(x, particle->getposition()(1), particle->getposition()(2))); 
-        // }else if(particle->getposition()(0) > L1){
-        //     auto x = fmod(particle->getposition()(0), L1);
-        //     particle->setposition(Eigen::Vector3d(x, particle->getposition()(1), particle->getposition()(2))); 
-        // }
-        // if(particle->getposition()(1) < 0.0){
-        //     auto y = fmod(particle->getposition()(1), L2) + L2;
-        //     particle->setposition(Eigen::Vector3d(particle->getposition()(0), y, particle->getposition()(2)));
-        // }else if(particle->getposition()(1) > L2){
-        //     auto y = fmod(particle->getposition()(1), L2);
-        //     particle->setposition(Eigen::Vector3d(particle->getposition()(0), y, particle->getposition()(2)));
-        // }
-        // if(particle->getposition()(2) < 0.0){
-        //     auto z = fmod(particle->getposition()(2), L3) + L3;
-        //     particle->setposition(Eigen::Vector3d(particle->getposition()(0), particle->getposition()(1), z));
-        // }else if(particle->getposition()(2) > L3){
-        //     auto z = fmod(particle->getposition()(2), L3);
-        //     particle->setposition(Eigen::Vector3d(particle->getposition()(0), particle->getposition()(1), z));
-        // }
-
 
     }
 }
@@ -275,13 +205,9 @@ void Run::ressignParticle()
 
 void Run::collision()
 {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::random_device rd01;
-    std::mt19937 gen01(rd01());
     int Ncollision_local {};
     for(auto& cell : m_cells){
-        cell->collision(gen, gen01);
+        cell->collision();
         Ncollision_local += cell->getCollisionNum();
     }
 

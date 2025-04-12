@@ -33,7 +33,7 @@ public:
     void removeallparticles();
 
     // collision
-    virtual void collision(std::mt19937& gen, std::mt19937& gen01);
+    virtual void collision();
     // sample micro physics
     virtual void sample();
 protected:

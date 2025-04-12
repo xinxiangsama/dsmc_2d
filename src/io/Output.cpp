@@ -7,12 +7,12 @@ Output::Output(Run *run)
 
 void Output::Write2HDF5(const std::string &filename)
 {
-    auto N1local = m_run->m_mesh->getnumberCellsX();
-    auto N2local = m_run->m_mesh->getnumberCellsY();
-    auto N1global = m_run->m_mesh->getnumberCellsXGlobal();
-    auto N2global = m_run->m_mesh->getnumberCellsYGlobal();
-    auto offsetX = m_run->m_mesh->getoffsetX();
-    auto offsetY = m_run->m_mesh->getoffsetY();
+    auto N1local = static_cast<hsize_t>(m_run->m_mesh->getnumberCellsX());
+    auto N2local = static_cast<hsize_t>(m_run->m_mesh->getnumberCellsY());
+    auto N1global = static_cast<hsize_t>(m_run->m_mesh->getnumberCellsXGlobal());
+    auto N2global = static_cast<hsize_t>(m_run->m_mesh->getnumberCellsYGlobal());
+    auto offsetX = static_cast<hsize_t>(m_run->m_mesh->getoffsetX());
+    auto offsetY = static_cast<hsize_t>(m_run->m_mesh->getoffsetY());
 
     H5::FileAccPropList fapl;
     H5Pset_fapl_mpio(fapl.getId(), MPI_COMM_WORLD, MPI_INFO_NULL);

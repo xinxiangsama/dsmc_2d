@@ -12,7 +12,7 @@ static constexpr double Vtl = 0.81;
 static constexpr double VSS_coe = 1.0; 
 
 //=================流场参数========================
-static constexpr double L1 = 8.0e-2; //横向维度 (m)
+static constexpr double L1 = 4.0e-2; //横向维度 (m)
 static constexpr double L2 = 4.0e-2; //纵向维度 (m)
 static constexpr double L3 = 4.0e-7; 
 static constexpr double Rho= 1.0e-4 ; // 流场密度 kg/m^3 
@@ -22,10 +22,10 @@ static constexpr double T = 273.0; // temperature (K)
 static constexpr double Radius = 2.0e-3; //圆柱半径
 static constexpr double Center_x = 2.0e-2; //圆柱中心横坐标
 static constexpr double Center_y = 2.0e-2; //圆柱中心纵坐标
-static constexpr double V_jet = 1000;//来流速度
+static constexpr double V_jet = 0.0;//来流速度
 //===============正交结构网格==================
 static constexpr unsigned int N1 = 400; //横向网格数
-static constexpr unsigned int N2 = 200; // 纵向网格数
+static constexpr unsigned int N2 = 400; // 纵向网格数
 static constexpr unsigned int N3 = 1; // 纵向网格数
 
 //=============一些constexper=========
