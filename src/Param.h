@@ -19,10 +19,10 @@ static constexpr double Rho= 1.0e-4 ; // 流场密度 kg/m^3
 static constexpr double T = 273.0; // temperature (K)
 
 //=================圆柱参数========================
-static constexpr double Radius = 1.0e-2; //圆柱半径
+static constexpr double Radius = 4.0e-3; //圆柱半径
 static constexpr double Center_x = 2.0e-2; //圆柱中心横坐标
 static constexpr double Center_y = 2.0e-2; //圆柱中心纵坐标
-static constexpr double V_jet = 0.0;//来流速度
+static constexpr double V_jet = 500.0;//来流速度
 //===============正交结构网格==================
 static constexpr unsigned int N1 = 200; //横向网格数
 static constexpr unsigned int N2 = 200; // 纵向网格数

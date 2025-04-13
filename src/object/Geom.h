@@ -13,9 +13,8 @@ public:
     virtual void Initialize() = 0;
 
     void SortSegment2Element(Element* element);
-    bool segmentIntersectsBox(const std::array<double, 2>& p1, const std::array<double, 2>& p2,
-        double xmin, double xmax, double ymin, double ymax);
-
+    std::unique_ptr<Eigen::Vector2d> cn_PnPolyX(const Eigen::Vector2d& P);
+    std::unique_ptr<Eigen::Vector2d> cn_PnPolyY(const Eigen::Vector2d& P);
 
 protected:
     size_t numLagrangianPoints = 0;

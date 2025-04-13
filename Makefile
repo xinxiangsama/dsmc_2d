@@ -4,11 +4,18 @@ CC = mpicxx
 
 # 定义编译选项，这里可以根据需要添加优化选项等
 # CCFLAGS = -O3 -march=native -funroll-loops -ffast-math -flto -Wunused-result -Wno-return-type -fprefetch-loop-arrays -I./src -I./include -I/home/xinxiangsama/lib/hdf5-1.14.6/include -DH5_BUILD_AS_DYNAMIC_LIB
-CCFLAGS = -O3 -Wunused-result -Wno-return-type -I./src -I./include -I/home/xinxiangsama/lib/hdf5-1.14.6/include -DH5_BUILD_AS_DYNAMIC_LIB
+CCFLAGS = -O3 -Wunused-result -Wno-return-type -I./src -I./include -I/usr/local/include/vtk-9.4 -I/home/xinxiangsama/lib/hdf5-1.14.6/include -DH5_BUILD_AS_DYNAMIC_LIB
 
 # 定义链接选项
 # LDFLAGS = -lboost_system -lboost_filesystem -L/home/xinxiangsama/lib/hdf5-1.14.6/lib -lhdf5_cpp -lhdf5
-LDFLAGS = -L/home/xinxiangsama/lib/hdf5-1.14.6/lib -lhdf5_cpp -lhdf5
+LDFLAGS = -L/usr/local/lib \
+          -lvtkCommonCore-9.4 \
+          -lvtkCommonDataModel-9.4 \
+		  -lvtksys-9.4\
+          -lvtkIOXML-9.4 \
+          -L/home/xinxiangsama/lib/hdf5-1.14.6/lib \
+          -lhdf5_cpp -lhdf5
+
 
 # 定义源文件
 SOURCES = \

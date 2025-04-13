@@ -8,7 +8,8 @@ bool Segment::isHit(const Particle::Coord &position) const
     Particle::Coord m_point = m_leftpoint->getPosition();
     // Check if the particle is within a certain distance from the wall
     double distance = (position - m_point).dot(m_normal);
-    return distance < 0.0;
+    // return distance < 0.0;
+    return true;
 }
 
 void Segment::Reflect(Particle *particle, const double &dt) const
@@ -32,7 +33,8 @@ void Segment::Reflect(Particle *particle, const double &dt) const
     particle->setvelocity(new_velocity);
     // Update the position of the particle
     auto new_position = hit_position + particle->getvelocity() * (dt - t_hit);
-    particle->setposition(new_position);
+    // particle->setposition(new_position);
+    particle->setposition({999, 999, 999});
 }
 
 const double &Segment::getlength() const

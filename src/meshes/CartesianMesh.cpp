@@ -110,7 +110,6 @@ void CartesianMesh::cutcell(Geom *geom)
         }
     }
 
-    std::cout <<"cut cell num is : "<<cutcell_num<<std::endl;
 }
 
 void CartesianMesh::setnumberCellsX(const int &N)

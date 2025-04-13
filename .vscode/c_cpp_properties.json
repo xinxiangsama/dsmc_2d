@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/xinxiangsama/lib/hdf5-1.14.6/include"
+                "/home/xinxiangsama/lib/hdf5-1.14.6/include",
+                "/usr/local/include/vtk-9.4"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

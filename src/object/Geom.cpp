@@ -1,5 +1,6 @@
 #include "Geom.h"
 #include <iostream>
+#include <unordered_map>
 
 void Geom::SortSegment2Element(Element *element)
 {
@@ -13,63 +14,84 @@ void Geom::SortSegment2Element(Element *element)
     double ymin = elemPos[1] - 0.5 * Ly;
     double ymax = elemPos[1] + 0.5 * Ly;
 
-    for (auto& segment : m_segments)
-    {   
-        const auto& p1 = segment.getleftpoint()->getPosition();
-        const auto& p2 = segment.getrightpoint()->getPosition();
+    // for 2d problem
+    Eigen::Vector2d point1{xmin, ymin};
+    Eigen::Vector2d point2{xmin, ymax};
+    Eigen::Vector2d point3{xmax, ymin};
+    Eigen::Vector2d point4{xmax, ymax};
+    auto ElementV =  std::array<Eigen::Vector2d, 4>{point1, point2, point3, point4};
 
-        // compute the cubic box of seement
-        double seg_xmin = std::min(p1[0], p2[0]);
-        double seg_xmax = std::max(p1[0], p2[0]);
-        double seg_ymin = std::min(p1[1], p2[1]);
-        double seg_ymax = std::max(p1[1], p2[1]);
-
-
-        if (segmentIntersectsBox({p1[0], p1[1]}, {p2[0], p2[1]}, xmin, xmax, ymin, ymax)) {
-            element->insertsegment(&segment);
+    int num {};
+    for(auto& P : ElementV){
+        if(cn_PnPolyX(P).get() && cn_PnPolyY(P).get()){
+            ++num;
+            std::cout << "intersection positon is"<<cn_PnPolyX(P)->transpose()<<std::endl;
         }
-        // // 检查是否有重叠（快速剔除）
-        // if (xmax < seg_xmin || xmin > seg_xmax || ymax < seg_ymin || ymin > seg_ymax)
-        // continue;
+    }
 
-        // // 粗略判断交集，可进一步精确判断相交
-        // element->insertsegment(&segment);
+    if(num != 0 && num != 4){
+        std::cout << "num is" << num <<std::endl;
     }
 }
 
-bool ccw(const std::array<double, 2>& A, const std::array<double, 2>& B, const std::array<double, 2>& C) {
-    return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0]);
+std::unique_ptr<Eigen::Vector2d> Geom::cn_PnPolyX(const Eigen::Vector2d &P)
+{
+    std::vector<std::unique_ptr<Eigen::Vector2d>> intersectionP;
+
+    // loop through all edges of polygon
+
+    for(int i = 0; i < numLagrangianPoints; ++i){
+        auto index1 = i;
+        auto index2 = (i + 1) % numLagrangianPoints;
+        auto point1 = m_points[index1];
+        auto point2 = m_points[index2];
+        auto V1 = Eigen::Vector2d{point1.getPosition()[0], point1.getPosition()[1]};
+        auto V2 = Eigen::Vector2d{point2.getPosition()[0], point2.getPosition()[1]};
+
+        if(((V1.y() <= P.y()) && (V2.y() > P.y())) // an upward crossing
+            ||((V1.y() > P.y()) && (V2.y() <= P.y()))){ //an downward crossing
+                double vt = static_cast<double>((P.y() - V1.y()) / (V2.y() - V1.y()));
+                double ixc = V1.x() + vt * (V2.x() - V1.x());
+                if(P.x() < ixc){
+                    intersectionP.emplace_back(std::make_unique<Eigen::Vector2d>(ixc, P.y()));
+                }
+            }
+    }
+    std::unique_ptr<Eigen::Vector2d> res;
+
+    if(intersectionP.size() == 1){
+        res = std::move(intersectionP[0]);
+    }
+    return res;
 }
 
-bool segmentIntersectsSegment(const std::array<double, 2>& A, const std::array<double, 2>& B,
-                               const std::array<double, 2>& C, const std::array<double, 2>& D) {
-    return (ccw(A, C, D) != ccw(B, C, D)) && (ccw(A, B, C) != ccw(A, B, D));
-}
-bool Geom::segmentIntersectsBox(const std::array<double, 2>& p1, const std::array<double, 2>& p2,
-    double xmin, double xmax, double ymin, double ymax) {
-    // 包围盒快速剔除
-    if (xmax < std::min(p1[0], p2[0]) || xmin > std::max(p1[0], p2[0]) ||
-    ymax < std::min(p1[1], p2[1]) || ymin > std::max(p1[1], p2[1])) {
-        return false;
+std::unique_ptr<Eigen::Vector2d> Geom::cn_PnPolyY(const Eigen::Vector2d &P)
+{
+    std::vector<std::unique_ptr<Eigen::Vector2d>> intersectionP;
+
+    for (int i = 0; i < numLagrangianPoints; ++i) {
+        int index1 = i;
+        int index2 = (i + 1) % numLagrangianPoints;
+
+        auto point1 = m_points[index1];
+        auto point2 = m_points[index2];
+        Eigen::Vector2d V1(point1.getPosition()[0], point1.getPosition()[1]);
+        Eigen::Vector2d V2(point2.getPosition()[0], point2.getPosition()[1]);
+
+        if (((V1.x() <= P.x()) && (V2.x() > P.x())) || ((V1.x() > P.x()) && (V2.x() <= P.x()))) {
+            double vt = (P.x() - V1.x()) / (V2.x() - V1.x());
+            double iyc = V1.y() + vt * (V2.y() - V1.y());
+
+            if (P.y() < iyc) {
+                intersectionP.emplace_back(std::make_unique<Eigen::Vector2d>(P.x(), iyc));
+            }
+        }
     }
 
-    // 定义矩形四个顶点
-    std::array<double, 2> bl = {xmin, ymin};  // bottom-left
-    std::array<double, 2> br = {xmax, ymin};  // bottom-right
-    std::array<double, 2> tr = {xmax, ymax};  // top-right
-    std::array<double, 2> tl = {xmin, ymax};  // top-left
+    std::unique_ptr<Eigen::Vector2d> res;
 
-    // 测试与矩形四边是否相交
-    if (segmentIntersectsSegment(p1, p2, bl, br)) return true;
-    if (segmentIntersectsSegment(p1, p2, br, tr)) return true;
-    if (segmentIntersectsSegment(p1, p2, tr, tl)) return true;
-    if (segmentIntersectsSegment(p1, p2, tl, bl)) return true;
-
-    // 线段完全包含在矩形内（不与边界相交，但在内部）
-    if (p1[0] >= xmin && p1[0] <= xmax && p1[1] >= ymin && p1[1] <= ymax &&
-    p2[0] >= xmin && p2[0] <= xmax && p2[1] >= ymin && p2[1] <= ymax) {
-        return true;
+    if(intersectionP.size() == 1){
+        res = std::move(intersectionP[0]);
     }
-
-    return false;
+    return res;
 }

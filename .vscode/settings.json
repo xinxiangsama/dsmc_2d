@@ -65,6 +65,8 @@
         "cfenv": "cpp",
         "typeinfo": "cpp",
         "dense": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp"
     }
 }
