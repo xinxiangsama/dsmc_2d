@@ -37,17 +37,29 @@ Face *Element::getface(size_t index) const
     std::cerr << "Index out of bounds in getface: " << index << std::endl;
     return nullptr; // or throw an exception
 }
-const std::vector<Segment *> &Element::getsegments() const
+const std::vector<std::unique_ptr<Segment>> &Element::getsegments() const
 {
     return m_segments;
 }
+const std::vector<std::unique_ptr<LargrangianPoint>> &Element::getIntersectionPs() const
+{
+    return m_intersectionPs;
+}
+std::array<std::unique_ptr<Vertice>, 4> &Element::getvertices()
+{
+    return m_vertices;
+}
 bool Element::ifcut()
 {
-    return m_segments.size() != 0; // if not zero, means it has been cut;
+    return !((!m_vertices[0]->isWall()) && (!m_vertices[1]->isWall()) && (!m_vertices[2]->isWall()) && (!m_vertices[3]->isWall()));
 }
 void Element::setposition(const Coord &position)
 {
     m_position = position;
+    m_vertices[0] = std::make_unique<Vertice>(Eigen::Vector3d{m_position(0) - 0.5 * m_L1, m_position(1) - 0.5 * m_L2, 0.0});
+    m_vertices[1] = std::make_unique<Vertice>(Eigen::Vector3d{m_position(0) + 0.5 * m_L1, m_position(1) - 0.5 * m_L2, 0.0});
+    m_vertices[2] = std::make_unique<Vertice>(Eigen::Vector3d{m_position(0) + 0.5 * m_L1, m_position(1) + 0.5 * m_L2, 0.0});
+    m_vertices[3] = std::make_unique<Vertice>(Eigen::Vector3d{m_position(0) - 0.5 * m_L1, m_position(1) + 0.5 * m_L2, 0.0});
 }
 void Element::setL1(const double &L1)
 {
@@ -87,7 +99,31 @@ void Element::setface(size_t index, std::unique_ptr<Face> &face)
     }
 }
 
-void Element::insertsegment(Segment *segment)
+void Element::insertsegment(std::unique_ptr<Segment>& segment)
 {
-    m_segments.push_back(segment);
+    m_segments.emplace_back(std::move(segment));
+}
+
+void Element::insertIntersectionP(std::unique_ptr<Eigen::Vector2d>& P)
+{
+    m_intersectionPs.emplace_back(std::make_unique<LargrangianPoint>(LargrangianPoint::Coord{P->x(), P->y(), 0.0}));
+}
+
+bool Element::ifContain2d(const Eigen::Vector2d &P)
+{
+    auto xmin = m_position(0) - 0.5 * m_L1;
+    auto xmax = m_position(0) + 0.5 * m_L1;
+    auto ymin = m_position(1) - 0.5 * m_L2;
+    auto ymax = m_position(1) + 0.5 * m_L2;
+
+    if(P.x() == xmin && P.y() > ymin && P.y() < ymax){
+        return true;
+    }else if (P.x() == xmax && P.y() > ymin && P.y() < ymax){
+        return true;
+    }else if (P.y() == ymin && P.x() > xmin && P.x() < xmax){
+        return true;
+    }else if (P.y() == ymax && P.x() > xmin && P.x() < xmax){
+        return true;
+    }
+    return false;
 }

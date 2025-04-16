@@ -4,11 +4,12 @@
 #include <memory>
 #include <Eigen/Dense>
 #include "object/Segment.h"
+#include "Vertice.h"
 
 class Element 
 {
 public:
-    using Coord = Eigen::Vector3d;
+    using Coord = Vertice::Coord;
     Element() = default;
     virtual ~Element() = default;
 
@@ -20,7 +21,9 @@ public:
     const double& getvolume() const;
     const std::array<std::unique_ptr<Face>, 6>& getfaces() const;
     Face* getface(size_t index) const;
-    const std::vector<Segment*>& getsegments() const;
+    const std::vector<std::unique_ptr<Segment>>& getsegments() const;
+    const std::vector<std::unique_ptr<LargrangianPoint>>& getIntersectionPs() const;
+    std::array<std::unique_ptr<Vertice>, 4>& getvertices();
     bool ifcut();
     // Note: The index should be in the range [0, 3] for a 2D element
     // Modifiers
@@ -31,7 +34,9 @@ public:
     void setvolume(const double& volume);
     void setface(size_t index, std::unique_ptr<Face>&& face);
     void setface(size_t index, std::unique_ptr<Face>& face);
-    void insertsegment(Segment* segment);
+    void insertsegment(std::unique_ptr<Segment>& segment);
+    void insertIntersectionP(std::unique_ptr<Eigen::Vector2d>& P);
+    bool ifContain2d(const Eigen::Vector2d& P);
 
 protected:
     Coord m_position; // Position of the element
@@ -42,5 +47,7 @@ protected:
     std::array<std::unique_ptr<Face>, 6> m_faces; // Array of faces associated with the element, order is left, right, bottom, top
     // Note: The size of the array should match the number of faces for the element type
     // For example, a 2D quadrilateral element has 4 faces
-    std::vector<Segment*> m_segments;
+    std::array<std::unique_ptr<Vertice>, 4> m_vertices;
+    std::vector<std::unique_ptr<Segment>> m_segments;
+    std::vector<std::unique_ptr<LargrangianPoint>> m_intersectionPs;
 };

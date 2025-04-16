@@ -13,6 +13,7 @@
 #include "io/Output.h"
 #include "cell/Cell.h"
 #include "object/Circle.h"
+#include "object/Square.h"
 
 class Output;
 class Run

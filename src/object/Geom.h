@@ -13,8 +13,10 @@ public:
     virtual void Initialize() = 0;
 
     void SortSegment2Element(Element* element);
-    std::unique_ptr<Eigen::Vector2d> cn_PnPolyX(const Eigen::Vector2d& P);
-    std::unique_ptr<Eigen::Vector2d> cn_PnPolyY(const Eigen::Vector2d& P);
+    int cn_PnPolyXpositive(const Eigen::Vector2d& P);
+    int cn_PnPolyYpositive(const Eigen::Vector2d& P);
+    int cn_PnPolyXnegetive(const Eigen::Vector2d& P);
+    int cn_PnPolyYnegetive(const Eigen::Vector2d& P);
 
 protected:
     size_t numLagrangianPoints = 0;

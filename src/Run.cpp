@@ -40,7 +40,8 @@ void Run::initialize(int argc, char **argv)
     m_mesh->setnumberCellsYGlobal(N2);
     m_mesh->setnumberCellsZGlobal(N3);
 
-    m_geom = std::make_unique<Circle>(100, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    m_geom = std::make_unique<Circle>(5, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    // m_geom = std::make_unique<Square>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     m_geom->Initialize();
 
     /*parallel part*/
@@ -120,12 +121,18 @@ void Run::assignParticle()
             double x = cell->getposition()(0) + (rx - 0.5) * m_mesh->getUnidX();
             double y = cell->getposition()(1) + (ry - 0.5) * m_mesh->getUnidY();
             double z = cell->getposition()(2) + (rz - 0.5) * m_mesh->getUnidZ();
-            if((x - Center_x) * (x - Center_x) + (y - Center_y) * (y - Center_y) < Radius * Radius){
-                continue;
-            }
+            // if((x - Center_x) * (x - Center_x) + (y - Center_y) * (y - Center_y) <= 1.5*(Radius * Radius)){
+            //     continue;
+            // }
             particle->setposition(Eigen::Vector3d(x, y, z));
             auto velocity = randomgenerator->MaxwellDistribution(Vstd);
+            
             velocity(0) += V_jet;
+            // if(x <= L1 * 0.5){
+            //     velocity(0) += V_jet;
+            // }else{
+            //     velocity(0) -= V_jet;
+            // }
             particle->setvelocity(velocity);
             m_particles.push_back(particle);
             cell->insertparticle(particle);
@@ -166,12 +173,15 @@ void Run::particlemove()
             particle->Move(tau);
 
             if(cell->ifcut()){
-                for(auto& sgement : cell->getelement()->getsegments()){
-                    if(sgement->isHit(particle->getposition())){
-                        sgement->Reflect(particle.get(), tau);
-                        break;
-                    }
-                }
+                // for(auto& segment : cell->getelement()->getsegments()){
+                //     if(segment->isHit(particle->getposition())){
+                //         segment->Reflect(particle, tau);
+                //         break;
+                //     }
+                //     //  particle->setposition({999.0, 999.0, 999.0});
+                // }
+
+                particle->setposition({999.0, 999.0, 999.0});
             }
 
             if(inlet->isHit(particle->getposition())){

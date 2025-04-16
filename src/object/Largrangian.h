@@ -8,6 +8,8 @@ class LargrangianPoint
 public:
     using Coord = Eigen::Vector3d;
     LargrangianPoint() = default;
+    LargrangianPoint(const Coord& _coord): m_position(_coord), m_leftsegment(nullptr), m_rightsegment(nullptr) {};
+    ~LargrangianPoint() = default;
 
     // Modify
     void setPosition(const Coord& position) { m_position = position; }

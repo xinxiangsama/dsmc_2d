@@ -28,7 +28,7 @@ SOURCES = \
 	./src/random/Random.cpp \
 	./src/boundary/WallBoundary.cpp ./src/boundary/OutflowBoundary.cpp ./src/boundary/PeriodicBoundary.cpp\
 	./src/io/Output.cpp \
-	./src/object/Segment.cpp ./src/object/Geom.cpp ./src/object/Circle.cpp \
+	./src/object/Segment.cpp ./src/object/Geom.cpp ./src/object/Circle.cpp ./src/object/Square.cpp \
 	
 
 # 定义目标文件
