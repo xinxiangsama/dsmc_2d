@@ -18,8 +18,21 @@ public:
     int cn_PnPolyXnegetive(const Eigen::Vector2d& P);
     int cn_PnPolyYnegetive(const Eigen::Vector2d& P);
 
+    Eigen::Vector2d PnPolyXpositiveIntersection(const Eigen::Vector2d& P);
+    Eigen::Vector2d PnPolyYpositiveIntersection(const Eigen::Vector2d& P);
+    Eigen::Vector2d PnPolyXnegetiveIntersection(const Eigen::Vector2d& P);
+    Eigen::Vector2d PnPolyYnegetiveIntersection(const Eigen::Vector2d& P);
+
 protected:
     size_t numLagrangianPoints = 0;
     std::vector<LargrangianPoint> m_points;
     std::vector<Segment> m_segments;
+};
+
+// Geom.h
+enum class RayDirection {
+    X_POS,  // +x direction
+    X_NEG,  // -x direction
+    Y_POS,  // +y direction
+    Y_NEG   // -y direction
 };

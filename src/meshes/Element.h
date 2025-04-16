@@ -35,7 +35,7 @@ public:
     void setface(size_t index, std::unique_ptr<Face>&& face);
     void setface(size_t index, std::unique_ptr<Face>& face);
     void insertsegment(std::unique_ptr<Segment>& segment);
-    void insertIntersectionP(std::unique_ptr<Eigen::Vector2d>& P);
+    void insertIntersectionP(Eigen::Vector2d& P);
     bool ifContain2d(const Eigen::Vector2d& P);
 
 protected:

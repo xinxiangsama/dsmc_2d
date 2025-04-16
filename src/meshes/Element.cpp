@@ -104,26 +104,30 @@ void Element::insertsegment(std::unique_ptr<Segment>& segment)
     m_segments.emplace_back(std::move(segment));
 }
 
-void Element::insertIntersectionP(std::unique_ptr<Eigen::Vector2d>& P)
+void Element::insertIntersectionP(Eigen::Vector2d& P)
 {
-    m_intersectionPs.emplace_back(std::make_unique<LargrangianPoint>(LargrangianPoint::Coord{P->x(), P->y(), 0.0}));
+    m_intersectionPs.emplace_back(std::make_unique<LargrangianPoint>(LargrangianPoint::Coord{P.x(), P.y(), 0.0}));
 }
 
 bool Element::ifContain2d(const Eigen::Vector2d &P)
 {
-    auto xmin = m_position(0) - 0.5 * m_L1;
-    auto xmax = m_position(0) + 0.5 * m_L1;
-    auto ymin = m_position(1) - 0.5 * m_L2;
-    auto ymax = m_position(1) + 0.5 * m_L2;
+    double tol = 1e-30;
+    double xmin = m_position(0) - 0.5 * m_L1;
+    double xmax = m_position(0) + 0.5 * m_L1;
+    double ymin = m_position(1) - 0.5 * m_L2;
+    double ymax = m_position(1) + 0.5 * m_L2;
 
-    if(P.x() == xmin && P.y() > ymin && P.y() < ymax){
-        return true;
-    }else if (P.x() == xmax && P.y() > ymin && P.y() < ymax){
-        return true;
-    }else if (P.y() == ymin && P.x() > xmin && P.x() < xmax){
-        return true;
-    }else if (P.y() == ymax && P.x() > xmin && P.x() < xmax){
-        return true;
-    }
-    return false;
+    double x = P.x();
+    double y = P.y();
+
+    bool onLeft   = std::abs(x - xmin) < tol && y > ymin - tol && y < ymax + tol;
+    bool onRight  = std::abs(x - xmax) < tol && y > ymin - tol && y < ymax + tol;
+    bool onBottom = std::abs(y - ymin) < tol && x > xmin - tol && x < xmax + tol;
+    bool onTop    = std::abs(y - ymax) < tol && x > xmin - tol && x < xmax + tol;
+
+    bool onCorner = (std::abs(x - xmin) < tol || std::abs(x - xmax) < tol) &&
+    (std::abs(y - ymin) < tol || std::abs(y - ymax) < tol);
+
+    return onLeft || onRight || onBottom || onTop;
 }
+
