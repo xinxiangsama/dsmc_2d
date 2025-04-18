@@ -50,8 +50,14 @@ std::array<std::unique_ptr<Vertice>, 4> &Element::getvertices()
     return m_vertices;
 }
 bool Element::ifcut()
-{
-    return !((!m_vertices[0]->isWall()) && (!m_vertices[1]->isWall()) && (!m_vertices[2]->isWall()) && (!m_vertices[3]->isWall()));
+{   
+    int numwall {}; 
+    for(auto& vertice : m_vertices){
+        if(vertice->isWall())
+            numwall++;
+    }
+
+    return (numwall !=0 && numwall != 4);
 }
 void Element::setposition(const Coord &position)
 {

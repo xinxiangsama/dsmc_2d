@@ -7,8 +7,8 @@ extern std::unique_ptr<Random> randomgenerator;
 
 bool Segment::isHit(const Particle::Coord &position) const
 {   
-    // Particle::Coord m_point = 0.5 * (m_leftpoint->getPosition() + m_rightpoint->getPosition());
-    Particle::Coord m_point = m_rightpoint->getPosition();
+    Particle::Coord m_point = 0.5 * (m_leftpoint->getPosition() + m_rightpoint->getPosition());
+    // Particle::Coord m_point = m_rightpoint->getPosition();
     // Check if the particle is within a certain distance from the wall
     double distance = (position - m_point).dot(m_normal);
     return distance < 0.0;
@@ -23,14 +23,14 @@ void Segment::Reflect(std::shared_ptr<Particle> particle, const double &dt) cons
     position -= velocity * dt; //back to previous position
     auto distance = (position - m_point).dot(m_normal);
     auto v_normal = velocity.dot(m_normal);
-    // // if(v_normal > 0.0){
-    // //     return;
-    // // }
+    if(v_normal > 0.0){
+        return;
+    }
     auto t_hit = abs( - distance / v_normal);
     t_hit = std::min(t_hit, dt);
-    // // if(t_hit > dt || t_hit < 0.0){
-    // //     return;
-    // // }
+    if(t_hit > dt || t_hit < 0.0){
+        return;
+    }
 
     auto hit_position = position + velocity * t_hit;
     // if(pow(hit_position.x() - Center_x, 2) + pow(hit_position.y() - Center_y, 2) < (Radius * Radius)){
@@ -43,8 +43,8 @@ void Segment::Reflect(std::shared_ptr<Particle> particle, const double &dt) cons
     // particle->setvelocity(V_jet * m_normal);
     auto new_position = hit_position + particle->getvelocity() * abs(dt - t_hit);
     // particle->setposition(position);
-    // particle->setposition(new_position);
-    particle->setposition({999, 999, 999});
+    particle->setposition(new_position);
+    // particle->setposition({999, 999, 999});
 
     // particle->setvelocity(abs(velocity.dot(m_normal)) * m_normal);
     // particle->setvelocity(V_jet * m_normal);

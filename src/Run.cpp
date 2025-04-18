@@ -40,7 +40,7 @@ void Run::initialize(int argc, char **argv)
     m_mesh->setnumberCellsYGlobal(N2);
     m_mesh->setnumberCellsZGlobal(N3);
 
-    m_geom = std::make_unique<Circle>(1024, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    m_geom = std::make_unique<Circle>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     // m_geom = std::make_unique<Square>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     m_geom->Initialize();
 
@@ -175,9 +175,9 @@ void Run::particlemove()
             if(cell->ifcut()){
                 for(auto& segment : cell->getelement()->getsegments()){
                     if(segment->isHit(particle->getposition())){
-                        // segment->Reflect(particle, tau);
+                        segment->Reflect(particle, tau);
                         // break;
-                        particle->setposition({999.0, 999.0, 999.0});
+                        // particle->setposition({999.0, 999.0, 999.0});
                     }
                     // particle->setposition({999.0, 999.0, 999.0});
                 }

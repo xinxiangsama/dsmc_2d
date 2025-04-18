@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/home/xinxiangsama/lib/hdf5-1.14.6/include",
-                "/usr/local/include/vtk-9.4"
+                "/usr/local/include/vtk-9.4",
+                "/usr/lib/x86_64-linux-gnu/openmpi/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
