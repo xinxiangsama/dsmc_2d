@@ -15,17 +15,20 @@ public:
     const double& getmass();
     const Coord& getposition();
     const Coord& getvelocity();
+    const bool& ifvalid() {return isvalid;}
     // Modifiers
     void setmass(const double& mass);
     void setposition(const Coord& position);
     void setvelocity(const Coord& velocity);
-    // Functions
+    void setInvalid() {isvalid = false;}
+     // Functions
     virtual void Move(const double& dt);
     virtual void Collision(Particle* other);
 protected:
     double m_mass;
     Coord m_position;
     Coord m_velocity;
+    bool isvalid {true};
 };
 
 struct ParticleExchangeType

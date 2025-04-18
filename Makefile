@@ -22,7 +22,7 @@ SOURCES = \
 	./src/meshes/Element.cpp  ./src/meshes/CartesianMesh.cpp \
 	./src/parallel/Parallel.cpp ./src/parallel/CartesianParallel.cpp \
 	./src/random/Random.cpp \
-	./src/boundary/WallBoundary.cpp ./src/boundary/OutflowBoundary.cpp ./src/boundary/PeriodicBoundary.cpp\
+	./src/boundary/WallBoundary.cpp ./src/boundary/OutletBoundary.cpp ./src/boundary/PeriodicBoundary.cpp ./src/boundary/InletBoundary.cpp\
 	./src/io/Output.cpp \
 	./src/object/Segment.cpp ./src/object/Geom.cpp ./src/object/Circle.cpp ./src/object/Square.cpp \
 	
