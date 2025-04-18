@@ -110,6 +110,64 @@ void CartesianMesh::cutcell(Geom *geom)
         }
     }
 
+    // 计算cut cell 的体积 分为 三种情况
+    for(auto& element : m_elements){
+        if(element->ifcut()){
+            int numwall {};
+            std::vector<Vertice*> wallvertice;
+            std::vector<Vertice*> fluidvertice;
+            for(auto& vertice : element->getvertices()){
+                if(vertice->isWall()){
+                    ++numwall;
+                    wallvertice.push_back(vertice.get());
+                }else{
+                    fluidvertice.push_back(vertice.get());
+                }
+            }
+            auto& segment = element->getsegments()[0];
+            auto P1 = segment->getleftpoint()->getPosition().head<2>();
+            auto P2 = segment->getrightpoint()->getPosition().head<2>();
+            auto normal = segment->getnormal().head<2>();
+            switch (numwall) {
+            case 1: {
+                auto v1 = wallvertice[0]->getPosition().head<2>();
+                auto h = abs((v1 - P1).dot(normal));
+                auto d = (P1 - P2).norm();
+                auto missVolume = 0.5 * h * d * element->getL3();
+                element->setvolume(element->getvolume() - missVolume);
+                break;
+            }
+            case 2: {
+                auto v1 = wallvertice[0]->getPosition().head<2>();
+                auto v2 = wallvertice[1]->getPosition().head<2>();
+                std::vector<Eigen::Vector2d> quad = {v1, P1, v2, P2};
+
+                // 拆分成两个三角形
+                auto area1 = 0.5 * std::abs((quad[1] - quad[0]).x() * (quad[2] - quad[0]).y() -
+                                            (quad[1] - quad[0]).y() * (quad[2] - quad[0]).x());
+
+                auto area2 = 0.5 * std::abs((quad[2] - quad[0]).x() * (quad[3] - quad[0]).y() -
+                                            (quad[2] - quad[0]).y() * (quad[3] - quad[0]).x());
+
+                double missVolume = (area1 + area2) * element->getL3();
+
+                element->setvolume(element->getvolume() - missVolume);
+                break;
+            }
+            case 3: {
+                auto v1 = fluidvertice[0]->getPosition().head<2>();
+                auto h = abs((v1 - P1).dot(normal));
+                auto d = (P1 - P2).norm();
+                auto leftVolume = 0.5 * h * d * element->getL3();
+                element->setvolume(leftVolume);
+                break;
+            }
+            default:
+                break;
+            }
+        }
+    }
+
 }
 
 void CartesianMesh::setnumberCellsX(const int &N)

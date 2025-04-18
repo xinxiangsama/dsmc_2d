@@ -1,5 +1,6 @@
 #include "Run.h"
 #include <chrono>
+#include <iomanip>
 double Vstd;
 double Vmax;
 double VHS_coe;
@@ -40,7 +41,7 @@ void Run::initialize(int argc, char **argv)
     m_mesh->setnumberCellsYGlobal(N2);
     m_mesh->setnumberCellsZGlobal(N3);
 
-    m_geom = std::make_unique<Circle>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    m_geom = std::make_unique<Circle>(256, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     // m_geom = std::make_unique<Square>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     m_geom->Initialize();
 
@@ -302,15 +303,46 @@ void Run::solver()
         if(myid == 0){
             std::cout << "iter: " << iter << std::endl;
         }
-        particlemove();
-        collision();
-        ressignParticle();
-        if (iter % 50 == 0) {
-            for(auto& cell : m_cells){
-                cell->sample();
-            }
-            m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
+            auto t_start = std::chrono::high_resolution_clock::now();
+
+            auto t_particlemove_start = std::chrono::high_resolution_clock::now();
+            particlemove();
+            auto t_particlemove_end = std::chrono::high_resolution_clock::now();
+        
+
+            auto t_collision_start = std::chrono::high_resolution_clock::now();
+            // collision();
+            auto t_collision_end = std::chrono::high_resolution_clock::now();
+        
+
+            auto t_ressign_start = std::chrono::high_resolution_clock::now();
+            // ressignParticle();
+            auto t_ressign_end = std::chrono::high_resolution_clock::now();
+        
+            auto t_end = std::chrono::high_resolution_clock::now();
+        if (myid == 0) {
+            // 输出计时统计
+            std::stringstream ss;
+            ss << "========================================\n";
+            ss << "Time Step: " << std::setw(3) << iter << "\n";
+            ss << "----------------------------------------\n";
+            ss << "Particle Move: " << std::fixed << std::setprecision(3)
+               << std::setw(6) << std::chrono::duration<double, std::milli>(t_particlemove_end - t_particlemove_start).count() << " ms\n";
+            ss << "Collision:     " << std::setw(6)
+               << std::chrono::duration<double, std::milli>(t_collision_end - t_collision_start).count() << " ms\n";
+            ss << "Reassign:      " << std::setw(6)
+               << std::chrono::duration<double, std::milli>(t_ressign_end - t_ressign_start).count() << " ms\n";
+            ss << "Total:         " << std::setw(6)
+               << std::chrono::duration<double, std::milli>(t_end - t_start).count() << " ms\n";
+            ss << "========================================\n";
+            std::cout << ss.str();
         }
+        // if (iter % 50 == 0) {
+        //     for(auto& cell : m_cells){
+        //         cell->sample();
+        //     }
+        //     m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
+        // }
     }
     if(myid == 0){
         std::cout << "Simulation Finished" << std::endl;
