@@ -10,7 +10,7 @@ public:
     InletBoundary(const int& _numprocs) : numprocs(_numprocs) {};
     virtual ~InletBoundary() = default;
 
-    virtual void InjetParticle(std::vector<std::shared_ptr<Particle>>& particles) override;
+    virtual void InjetParticle(std::vector<Particle>& particles) override;
 
     virtual bool isHit(const Particle::Coord& position) const {};
 

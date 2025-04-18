@@ -15,7 +15,7 @@ bool Segment::isHit(const Particle::Coord &position) const
     // return true;
 }
 
-void Segment::Reflect(std::shared_ptr<Particle> particle, const double &dt) const
+void Segment::Reflect(Particle* particle, const double &dt) const
 {
     Particle::Coord m_point = 0.5 * (m_leftpoint->getPosition() + m_rightpoint->getPosition());
     auto velocity = particle->getvelocity();

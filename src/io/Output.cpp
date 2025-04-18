@@ -44,9 +44,9 @@ void Output::Write2HDF5(const std::string &filename)
     std::vector<double> Rho(N1local * N2local, 0.0);
     for (size_t i = 0; i < N1local; ++i){
         for (size_t j = 0; j < N2local; ++j){
-            auto cell = m_run->m_cells[i * N2local + j].get();
-            auto phase = cell->getphase();
-            auto element = cell->getelement();
+            auto cell = m_run->m_cells[i * N2local + j];
+            auto phase = cell.getphase();
+            auto element = cell.getelement();
 
             U[i * N2local + j] = phase->getvelocity()[0];
             V[i * N2local + j] = phase->getvelocity()[1];

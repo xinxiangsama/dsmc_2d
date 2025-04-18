@@ -14,8 +14,8 @@ public:
     virtual void ZoneDcomposition() = 0; // subclass must have one!
     virtual void setNeibours() = 0;
     virtual void exchangedata() {};
-    virtual void setsendbuffer(std::vector<std::shared_ptr<Particle>>& sendbuffer) {};
-    virtual void writerecvbuffer(std::vector<std::shared_ptr<Particle>>& m_particles) {};
+    virtual void setsendbuffer(std::vector<Particle>& sendbuffer) {};
+    virtual void writerecvbuffer(std::vector<Particle>& m_particles) {};
 
     // Access
     virtual const int& getLeftNeibour() {};

@@ -37,8 +37,8 @@ public:
     void assignParticle2cell();
 
 protected:
-    std::vector<std::unique_ptr<Cell>> m_cells;
-    std::vector<std::shared_ptr<Particle>> m_particles;
+    std::vector<Cell> m_cells;
+    std::vector<Particle> m_particles;
     size_t numparticlelocal;
 
     /*parallel*/

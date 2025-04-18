@@ -8,9 +8,9 @@ public:
     Mesh() = default;
     virtual ~Mesh() = default;
 
-    virtual void allocateCells(std::vector<std::unique_ptr<Cell>>& cells) {};
+    virtual void allocateCells(std::vector<Cell>& cells) {};
     virtual void setelement() {};
-    virtual void BindCellwithElement(std::vector<std::unique_ptr<Cell>>& cells) {};
+    virtual void BindCellwithElement(std::vector<Cell>& cells) {};
     virtual void BindElementwithFace() {};
     virtual void cutcell(Geom* geom) {};
 

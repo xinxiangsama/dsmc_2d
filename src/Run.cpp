@@ -84,11 +84,11 @@ void Run::initialize(int argc, char **argv)
     /*Initial particle phase*/
     // assignParticle();
     for(auto& cell : m_cells){
-        cell->allocatevar();
+        cell.allocatevar();
     }
 
     for(auto& cell : m_cells){
-        cell->sample();
+        cell.sample();
     }
     m_output->Write2HDF5("./res/init.h5");
     if(myid == 0){
@@ -111,21 +111,21 @@ void Run::assignParticle()
     std::random_device rd;
     auto numparticlepercell = numparticlelocal / (m_mesh->getnumberCellsX() * m_mesh->getnumberCellsY() * m_mesh->getnumberCellsZ());
     for(auto& cell: m_cells){
-        std::mt19937 gen(rd() + cell->getindex()[0] + cell->getindex()[1] + cell->getindex()[2]);
+        std::mt19937 gen(rd() + cell.getindex()[0] + cell.getindex()[1] + cell.getindex()[2]);
         for(int i = 0; i < numparticlepercell; ++i){
-            auto particle = std::make_shared<Particle>();
-            particle->setmass(mass);
+            auto particle = Particle();
+            particle.setmass(mass);
             auto rx = randomgenerator->getrandom01();
             auto ry = randomgenerator->getrandom01();
             auto rz = randomgenerator->getrandom01();
 
-            double x = cell->getposition()(0) + (rx - 0.5) * m_mesh->getUnidX();
-            double y = cell->getposition()(1) + (ry - 0.5) * m_mesh->getUnidY();
-            double z = cell->getposition()(2) + (rz - 0.5) * m_mesh->getUnidZ();
+            double x = cell.getposition()(0) + (rx - 0.5) * m_mesh->getUnidX();
+            double y = cell.getposition()(1) + (ry - 0.5) * m_mesh->getUnidY();
+            double z = cell.getposition()(2) + (rz - 0.5) * m_mesh->getUnidZ();
             if((x - Center_x) * (x - Center_x) + (y - Center_y) * (y - Center_y) <= 1.5*(Radius * Radius)){
                 continue;
             }
-            particle->setposition(Eigen::Vector3d(x, y, z));
+            particle.setposition(Eigen::Vector3d(x, y, z));
             auto velocity = randomgenerator->MaxwellDistribution(Vstd);
             
             velocity(0) += V_jet;
@@ -134,9 +134,9 @@ void Run::assignParticle()
             // }else{
             //     velocity(0) -= V_jet;
             // }
-            particle->setvelocity(velocity);
-            m_particles.push_back(particle);
-            cell->insertparticle(particle);
+            particle.setvelocity(velocity);
+            m_particles.push_back(std::move(particle));
+            cell.insertparticle(&(*std::prev(m_particles.end())));
         }
     }
 }
@@ -145,11 +145,11 @@ void Run::particlemove()
 {   
 
     for(auto& cell : m_cells){
-        for(auto& particle : cell->getparticles()){
+        for(auto& particle : cell.getparticles()){
             particle->Move(tau);
 
-            if(cell->ifcut()){
-                for(auto& segment : cell->getelement()->getsegments()){
+            if(cell.ifcut()){
+                for(auto& segment : cell.getelement()->getsegments()){
                     if(segment->isHit(particle->getposition())){
                         segment->Reflect(particle, tau);
                     }
@@ -160,21 +160,21 @@ void Run::particlemove()
             //     inlet->Reflect(particle.get(), tau);
             // }
             if(outlet->isHit(particle->getposition())){
-                outlet->Reflect(particle.get(), tau);
+                outlet->Reflect(particle, tau);
             }
 
             if(wall1->isHit(particle->getposition())){
-                wall1->Reflect(particle.get(), tau);
+                wall1->Reflect(particle, tau);
             }
             if(wall2->isHit(particle->getposition())){
-                wall2->Reflect(particle.get(), tau);
+                wall2->Reflect(particle, tau);
             }
 
             if(wall3->isHit(particle->getposition())){
-                wall3->Reflect(particle.get(), tau);
+                wall3->Reflect(particle, tau);
             }
             if(wall4->isHit(particle->getposition())){
-                wall4->Reflect(particle.get(), tau);
+                wall4->Reflect(particle, tau);
             }
         }
     }
@@ -183,17 +183,17 @@ void Run::particlemove()
 void Run::ressignParticle()
 {   
     for(auto& cell : m_cells){
-        cell->removeallparticles();
+        cell.removeallparticles();
     }
 
     inlet->InjetParticle(m_particles);
-    std::vector<std::shared_ptr<Particle>> particle_out;
-    std::vector<std::shared_ptr<Particle>> particle_in;
+    std::vector<Particle> particle_out;
+    std::vector<Particle> particle_in;
     particle_out.reserve(m_particles.size());
     particle_in.reserve(m_particles.size());
     for(auto& particle : m_particles){
-        if(particle->ifvalid()){ // delete invalid particle, like flow out of field
-            auto position = particle->getposition();
+        if(particle.ifvalid()){ // delete invalid particle, like flow out of field
+            auto position = particle.getposition();
             if(position(0) < m_mesh->getoffsetX() * m_mesh->getUnidX() || 
             position(0) > (m_mesh->getnumberCellsX() + m_mesh->getoffsetX()) * m_mesh->getUnidX()|| 
             position(1) < m_mesh->getoffsetY() * m_mesh->getUnidY() || 
@@ -228,8 +228,8 @@ void Run::collision()
 {
     int Ncollision_local {};
     for(auto& cell : m_cells){
-        cell->collision();
-        Ncollision_local += cell->getCollisionNum();
+        cell.collision();
+        Ncollision_local += cell.getCollisionNum();
     }
 
     int Ncollision_global {};
@@ -253,20 +253,20 @@ Cell* Run::locatecell(const Particle::Coord& position)
         return nullptr;
     }
 
-    if(Eigen::Vector3d{i,j,k} != m_cells[k + j * m_mesh->getnumberCellsZ() + i * m_mesh->getnumberCellsY() * m_mesh->getnumberCellsZ()]->getindex()){
+    if(Eigen::Vector3d{i,j,k} != m_cells[k + j * m_mesh->getnumberCellsZ() + i * m_mesh->getnumberCellsY() * m_mesh->getnumberCellsZ()].getindex()){
         std::cerr <<"error!"<<std::endl;
     }
 
-    return m_cells[k + j * m_mesh->getnumberCellsZ() + i * m_mesh->getnumberCellsY() * m_mesh->getnumberCellsZ()].get();
+    return &m_cells[k + j * m_mesh->getnumberCellsZ() + i * m_mesh->getnumberCellsY() * m_mesh->getnumberCellsZ()];
 }
 
 void Run::assignParticle2cell()
 {
     for(auto& particle : m_particles){
-        auto position = particle->getposition();
+        auto position = particle.getposition();
         auto cell = locatecell(position);
         if(cell != nullptr){
-            cell->insertparticle(particle);
+            cell->insertparticle(&particle);
         }
     }
 }
@@ -280,16 +280,14 @@ void Run::solver()
             auto t_particlemove_start = std::chrono::high_resolution_clock::now();
             particlemove();
             auto t_particlemove_end = std::chrono::high_resolution_clock::now();
-        
-
-            auto t_collision_start = std::chrono::high_resolution_clock::now();
-            collision();
-            auto t_collision_end = std::chrono::high_resolution_clock::now();
-        
 
             auto t_ressign_start = std::chrono::high_resolution_clock::now();
             ressignParticle();
             auto t_ressign_end = std::chrono::high_resolution_clock::now();
+
+            auto t_collision_start = std::chrono::high_resolution_clock::now();
+            collision();
+            auto t_collision_end = std::chrono::high_resolution_clock::now();
         
             auto t_end = std::chrono::high_resolution_clock::now();
         if (myid == 0) {
@@ -300,10 +298,10 @@ void Run::solver()
             ss << "----------------------------------------\n";
             ss << "Particle Move: " << std::fixed << std::setprecision(3)
                << std::setw(6) << std::chrono::duration<double, std::milli>(t_particlemove_end - t_particlemove_start).count() << " ms\n";
+               ss << "Reassign:      " << std::setw(6)
+               << std::chrono::duration<double, std::milli>(t_ressign_end - t_ressign_start).count() << " ms\n";
             ss << "Collision:     " << std::setw(6)
                << std::chrono::duration<double, std::milli>(t_collision_end - t_collision_start).count() << " ms\n";
-            ss << "Reassign:      " << std::setw(6)
-               << std::chrono::duration<double, std::milli>(t_ressign_end - t_ressign_start).count() << " ms\n";
             ss << "Total:         " << std::setw(6)
                << std::chrono::duration<double, std::milli>(t_end - t_start).count() << " ms\n";
             ss << "========================================\n";
@@ -311,7 +309,7 @@ void Run::solver()
         }
         if (iter % 50 == 0) {
             for(auto& cell : m_cells){
-                cell->sample();
+                cell.sample();
             }
             m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
         }

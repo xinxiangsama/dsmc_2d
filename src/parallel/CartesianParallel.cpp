@@ -57,13 +57,13 @@ void CartesianParallel::exchangedata()
     std::vector<ParticleExchangeType> sendbuffer(m_sendbuffer.size());
     auto sendnum = static_cast<int>(m_sendbuffer.size());
     for(size_t i = 0; i < m_sendbuffer.size(); ++i){
-        sendbuffer[i].mass = m_sendbuffer[i]->getmass();
-        sendbuffer[i].x = m_sendbuffer[i]->getposition()(0);
-        sendbuffer[i].y = m_sendbuffer[i]->getposition()(1);
-        sendbuffer[i].z = m_sendbuffer[i]->getposition()(2);
-        sendbuffer[i].u = m_sendbuffer[i]->getvelocity()(0);
-        sendbuffer[i].v = m_sendbuffer[i]->getvelocity()(1);
-        sendbuffer[i].w = m_sendbuffer[i]->getvelocity()(2);
+        sendbuffer[i].mass = m_sendbuffer[i].getmass();
+        sendbuffer[i].x = m_sendbuffer[i].getposition()(0);
+        sendbuffer[i].y = m_sendbuffer[i].getposition()(1);
+        sendbuffer[i].z = m_sendbuffer[i].getposition()(2);
+        sendbuffer[i].u = m_sendbuffer[i].getvelocity()(0);
+        sendbuffer[i].v = m_sendbuffer[i].getvelocity()(1);
+        sendbuffer[i].w = m_sendbuffer[i].getvelocity()(2);
     }
     MPI_Barrier(MPI_COMM_WORLD);
     for(int step = 1; step < numprocs; ++step){
@@ -90,25 +90,25 @@ void CartesianParallel::exchangedata()
             recvbuffer[i].x < (m_mesh->getnumberCellsX() + m_mesh->getoffsetX()) * m_mesh->getUnidX() &&
             recvbuffer[i].y > m_mesh->getoffsetY() * m_mesh->getUnidY() &&
             recvbuffer[i].y < (m_mesh->getnumberCellsY() + m_mesh->getoffsetY()) * m_mesh->getUnidY()){
-                auto particle = std::make_unique<Particle>();
-                particle->setmass(recvbuffer[i].mass);
+                auto particle = Particle();
+                particle.setmass(recvbuffer[i].mass);
                 Eigen::Vector3d position(recvbuffer[i].x, recvbuffer[i].y, recvbuffer[i].z);
                 Eigen::Vector3d velocity(recvbuffer[i].u, recvbuffer[i].v, recvbuffer[i].w);
-                particle->setposition(position);
-                particle->setvelocity(velocity);
+                particle.setposition(position);
+                particle.setvelocity(velocity);
                 m_recvbuffer.emplace_back(std::move(particle));
             }
         }
     }
 }
 
-void CartesianParallel::setsendbuffer(std::vector<std::shared_ptr<Particle>>& sendbuffer)
+void CartesianParallel::setsendbuffer(std::vector<Particle>& sendbuffer)
 {
     m_sendbuffer.insert(m_sendbuffer.end(),sendbuffer.begin(), sendbuffer.end());
     sendbuffer.clear();
 }
 
-void CartesianParallel::writerecvbuffer(std::vector<std::shared_ptr<Particle>>& m_particles)
+void CartesianParallel::writerecvbuffer(std::vector<Particle>& m_particles)
 {   
     // std::cout <<"我出去了 : " << m_sendbuffer.size()<<" 个粒子"<<
     //             "我进来了 : " <<m_recvbuffer.size() <<" 个粒子"<<std::endl;

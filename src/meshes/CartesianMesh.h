@@ -6,9 +6,9 @@ class CartesianMesh : public Mesh
 public:
     CartesianMesh() = default;
     ~CartesianMesh() = default;
-    void allocateCells(std::vector<std::unique_ptr<Cell>>& cells) override;
+    void allocateCells(std::vector<Cell>& cells) override;
     void setelement() override;
-    void BindCellwithElement(std::vector<std::unique_ptr<Cell>>& cells);
+    void BindCellwithElement(std::vector<Cell>& cells);
     void BindElementwithFace();
     virtual void cutcell(Geom* geom);
     // Modifiers

@@ -10,7 +10,7 @@ using Coord = LargrangianPoint::Coord;
     Segment() = default;
 
     virtual bool isHit(const Particle::Coord& position) const;
-    virtual void Reflect(std::shared_ptr<Particle> particle, const double& dt) const;
+    virtual void Reflect(Particle* particle, const double& dt) const;
     // Access
     const double& getlength() const;
     const Coord& getsloop() const;

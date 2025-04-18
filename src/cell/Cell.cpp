@@ -10,7 +10,7 @@ const Cell::Coord &Cell::getposition() const
 {
     return m_position;
 }
-const std::vector<std::shared_ptr<Particle>> &Cell::getparticles() const
+const std::vector<Particle*> &Cell::getparticles() const
 {
     return m_particles;
 }
@@ -26,7 +26,7 @@ const Cell::Coord &Cell::getindex() const
 {
     return m_index;
 }
-const std::vector<std::unique_ptr<Cell>> &Cell::getchildren() const
+const std::vector<std::shared_ptr<Cell>> &Cell::getchildren() const
 {
     return m_children;
 }
@@ -52,13 +52,13 @@ void Cell::setindex(const Coord &index)
 }
 void Cell::allocatevar()
 {
-    m_phase = std::make_unique<Phase>();
+    m_phase = std::make_shared<Phase>();
 }
-void Cell::insertparticle(std::shared_ptr<Particle> particle)
+void Cell::insertparticle(Particle*  particle)
 {
     m_particles.push_back(particle);
 }
-void Cell::removeparticle(std::shared_ptr<Particle> particle)
+void Cell::removeparticle(Particle*  particle)
 {
     auto it = std::remove(m_particles.begin(), m_particles.end(), particle);
     m_particles.erase(it);
@@ -114,7 +114,7 @@ void Cell::collision()
     
                 auto rand01 = randomgenerator->getrandom01();
                 if(rand01 < (Src / Srcmax)){
-                    particle1->Collision(particle2.get());
+                    particle1->Collision(particle2);
                     // auto Vmean = Particle::Coord(
                     //     0.5 * (particle1->getvelocity()[0] + particle2->getvelocity()[0]),
                     //     0.5 * (particle1->getvelocity()[1] + particle2->getvelocity()[1]),

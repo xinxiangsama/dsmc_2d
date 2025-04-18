@@ -1,7 +1,7 @@
 #include "CartesianMesh.h"
 #include <iostream>
 
-void CartesianMesh::allocateCells(std::vector<std::unique_ptr<Cell>> &cells)
+void CartesianMesh::allocateCells(std::vector<Cell> &cells)
 {
     cells.reserve(m_numberCellsX * m_numberCellsY * m_numberCellsZ);
     for (int i = 0; i < m_numberCellsX; ++i)
@@ -10,9 +10,9 @@ void CartesianMesh::allocateCells(std::vector<std::unique_ptr<Cell>> &cells)
         {
             for(int k = 0; k < m_numberCellsZ; ++k)
             {
-                auto cell = std::make_unique<Cell>();
-                cell->setindex(Cell::Coord(i, j, k));
-                cells.push_back(std::move(cell));
+                auto cell = Cell();
+                cell.setindex(Cell::Coord(i, j, k));
+                cells.emplace_back(cell);
             }
         }
     }
@@ -44,7 +44,7 @@ void CartesianMesh::setelement()
 
 }
 
-void CartesianMesh::BindCellwithElement(std::vector<std::unique_ptr<Cell>> &cells)
+void CartesianMesh::BindCellwithElement(std::vector<Cell> &cells)
 {
     for(int i = 0; i < m_numberCellsX; ++i)
     {
@@ -54,8 +54,8 @@ void CartesianMesh::BindCellwithElement(std::vector<std::unique_ptr<Cell>> &cell
             {
                 auto &cell = cells[k + j * m_numberCellsZ + i * m_numberCellsY * m_numberCellsZ];
                 auto &element = m_elements[k + j * m_numberCellsZ + i * m_numberCellsY * m_numberCellsZ];
-                cell->setelement(element.get());
-                cell->setposition(element->getposition());
+                cell.setelement(element.get());
+                cell.setposition(element->getposition());
             }
         }
     }
