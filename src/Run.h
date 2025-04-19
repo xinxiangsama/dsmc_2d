@@ -33,7 +33,6 @@ public:
     void particlemove();
     void ressignParticle();
     void collision();
-    Cell* locatecell(const Particle::Coord& position);
     void assignParticle2cell();
 
 protected:

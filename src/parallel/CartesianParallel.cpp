@@ -90,13 +90,9 @@ void CartesianParallel::exchangedata()
             recvbuffer[i].x < (m_mesh->getnumberCellsX() + m_mesh->getoffsetX()) * m_mesh->getUnidX() &&
             recvbuffer[i].y > m_mesh->getoffsetY() * m_mesh->getUnidY() &&
             recvbuffer[i].y < (m_mesh->getnumberCellsY() + m_mesh->getoffsetY()) * m_mesh->getUnidY()){
-                auto particle = Particle();
-                particle.setmass(recvbuffer[i].mass);
                 Eigen::Vector3d position(recvbuffer[i].x, recvbuffer[i].y, recvbuffer[i].z);
                 Eigen::Vector3d velocity(recvbuffer[i].u, recvbuffer[i].v, recvbuffer[i].w);
-                particle.setposition(position);
-                particle.setvelocity(velocity);
-                m_recvbuffer.emplace_back(std::move(particle));
+                m_recvbuffer.emplace_back(mass, position, velocity);
             }
         }
     }

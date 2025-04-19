@@ -10,19 +10,15 @@ void InletBoundary::InjetParticle(std::vector<Particle>& particles)
     JetParticleNum /= numprocs; // assign to every procs;
 
     for(int i = 0; i < JetParticleNum; ++i){
-        auto particle = Particle();
-        particle.setmass(mass);
         auto rx = randomgenerator->getrandom01();
         auto ry = randomgenerator->getrandom01();
         auto rz = randomgenerator->getrandom01();
         double x = JetLength * rx;
         double y = L2 * ry;
         double z = L3 * rz;
-        particle.setposition(Eigen::Vector3d(x, y, z));
         auto velocity = randomgenerator->MaxwellDistribution(Vstd);
         velocity(0) += V_jet;
-        particle.setvelocity(velocity);
-        particles.push_back(std::move(particle));
+        particles.emplace_back(mass, Eigen::Vector3d{x, y, z}, velocity);
     }
 
 }

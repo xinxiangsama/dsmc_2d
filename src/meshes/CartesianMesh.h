@@ -11,6 +11,7 @@ public:
     void BindCellwithElement(std::vector<Cell>& cells);
     void BindElementwithFace();
     virtual void cutcell(Geom* geom);
+    virtual int getIndex(const Particle::Coord& position) override;
     // Modifiers
     void setnumberCellsX(const int& N) override;
     void setnumberCellsY(const int& N) override;

@@ -13,7 +13,7 @@ public:
     virtual void BindCellwithElement(std::vector<Cell>& cells) {};
     virtual void BindElementwithFace() {};
     virtual void cutcell(Geom* geom) {};
-
+    virtual int getIndex(const Particle::Coord& position) {};
     // Modify
     virtual void setnumberCellsX(const int&) {};
     virtual void setnumberCellsY(const int&) {};

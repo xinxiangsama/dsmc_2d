@@ -151,7 +151,7 @@ void CartesianMesh::cutcell(Geom *geom)
 
                 double missVolume = (area1 + area2) * element->getL3();
 
-                element->setvolume(element->getvolume() - missVolume);
+                // element->setvolume(element->getvolume() - missVolume);
                 break;
             }
             case 3: {
@@ -159,7 +159,7 @@ void CartesianMesh::cutcell(Geom *geom)
                 auto h = abs((v1 - P1).dot(normal));
                 auto d = (P1 - P2).norm();
                 auto leftVolume = 0.5 * h * d * element->getL3();
-                element->setvolume(leftVolume);
+                // element->setvolume(leftVolume);
                 break;
             }
             default:
@@ -168,6 +168,18 @@ void CartesianMesh::cutcell(Geom *geom)
         }
     }
 
+}
+
+int CartesianMesh::getIndex(const Particle::Coord &position)
+{
+    auto i = static_cast<int>(position(0) / m_UnidX) - m_offsetX;
+    auto j = static_cast<int>(position(1) / m_UnidY) - m_offsetY;
+    auto k = static_cast<int>(position(2) / m_UnidZ);
+
+    if(i < 0 || i >= m_numberCellsX|| j < 0 || j >= m_numberCellsY)
+        return -1;
+    
+    return (k + j * m_numberCellsZ + i * m_numberCellsY * m_numberCellsZ);
 }
 
 void CartesianMesh::setnumberCellsX(const int &N)
