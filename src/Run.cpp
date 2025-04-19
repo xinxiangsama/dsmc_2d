@@ -187,6 +187,8 @@ void Run::ressignParticle()
     }
 
     inlet->InjetParticle(m_particles);
+
+    auto t_classify_start = std::chrono::high_resolution_clock::now();
     std::vector<Particle> particle_out;
     std::vector<Particle> particle_in;
     particle_out.reserve(m_particles.size());
@@ -204,23 +206,40 @@ void Run::ressignParticle()
             }
         }
     }
+    auto t_classify_end = std::chrono::high_resolution_clock::now();
 
-
+    auto t_insert_start = std::chrono::high_resolution_clock::now();
     m_particles.clear();
     m_particles.insert(m_particles.end(), particle_in.begin(), particle_in.end());;
+    auto t_insert_end = std::chrono::high_resolution_clock::now();
+
+    auto t_exchange_start = std::chrono::high_resolution_clock::now();
     m_parallel->setsendbuffer(particle_out);
-
     m_parallel->exchangedata();
-
     m_parallel->writerecvbuffer(m_particles);
+    auto t_exchange_end = std::chrono::high_resolution_clock::now();
 
+    auto t_assign_start = std::chrono::high_resolution_clock::now();
     assignParticle2cell();
+    auto t_assign_end = std::chrono::high_resolution_clock::now();
 
     int N_particle_local = m_particles.size();
     int N_particle_global {};
     MPI_Reduce(&N_particle_local, &N_particle_global, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (myid == 0) {
         std::cout << "Total number of particles: " << N_particle_global << std::endl;
+        std::cout << "Classify Time: " 
+              << std::chrono::duration<double, std::milli>(t_classify_end - t_classify_start).count() 
+              << " ms" << std::endl;
+        std::cout << "Insert Time: " 
+              << std::chrono::duration<double, std::milli>(t_insert_end - t_insert_start).count() 
+              << " ms" << std::endl;
+        std::cout << "Exchange Time: " 
+              << std::chrono::duration<double, std::milli>(t_exchange_end - t_exchange_start).count() 
+              << " ms" << std::endl;
+        std::cout << "Assign Time: " 
+              << std::chrono::duration<double, std::milli>(t_assign_end - t_assign_start).count() 
+              << " ms" << std::endl;
     }
 }
 
@@ -298,7 +317,7 @@ void Run::solver()
             ss << "----------------------------------------\n";
             ss << "Particle Move: " << std::fixed << std::setprecision(3)
                << std::setw(6) << std::chrono::duration<double, std::milli>(t_particlemove_end - t_particlemove_start).count() << " ms\n";
-               ss << "Reassign:      " << std::setw(6)
+            ss << "Reassign:      " << std::setw(6)
                << std::chrono::duration<double, std::milli>(t_ressign_end - t_ressign_start).count() << " ms\n";
             ss << "Collision:     " << std::setw(6)
                << std::chrono::duration<double, std::milli>(t_collision_end - t_collision_start).count() << " ms\n";
