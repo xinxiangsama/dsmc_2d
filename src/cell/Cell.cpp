@@ -146,7 +146,8 @@ void Cell::collision()
 void Cell::sample()
 {
     N_particles = m_particles.size();
-    auto m_volume = m_element->getvolume();
+    // auto m_volume = m_element->getvolume();
+    auto m_volume = (Volume) / (N1 * N2 * N3);
 
     auto ParticleNumdensity = static_cast<double>(N_particles * Fn) / m_volume;
     m_phase->setdensity(ParticleNumdensity * mass);
@@ -174,6 +175,11 @@ void Cell::sample()
     m_phase->setvelocity({U, V, W});
     m_phase->settemperature(Temperature);
     m_phase->setpressure(Pressure);
+
+    if(m_phase->getdensity() > 1.0e-2){
+        std::cerr <<"density is error, particle num in this cell is : "<< N_particles<<
+        " And cell volume is : "<<m_element->getvolume()<<std::endl;
+    }
 }
 Cell::~Cell()
 {

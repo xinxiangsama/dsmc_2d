@@ -64,10 +64,10 @@ void Run::initialize(int argc, char **argv)
     m_mesh->cutcell(m_geom.get());
     /*boundary part*/
     bool ifdisfuse = false;
-    inlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), 0, L1);
-    // inlet = std::make_unique<InletBoundary>(numprocs);
-    outlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), 0, L1);
-    // outlet = std::make_unique<OutletBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0));
+    // inlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), 0, L1);
+    inlet = std::make_unique<InletBoundary>(numprocs);
+    // outlet = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), 0, L1);
+    outlet = std::make_unique<OutletBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0));
     // inlet = std::make_unique<WallBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), ifdisfuse);
     // outlet = std::make_unique<WallBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), ifdisfuse);
     wall1 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.0, 0.5 * L3), Eigen::Vector3d(0.0, 1.0, 0.0), ifdisfuse);
@@ -82,7 +82,7 @@ void Run::initialize(int argc, char **argv)
     /*output part*/
     m_output = std::make_unique<Output>(this);
     /*Initial particle phase*/
-    assignParticle();
+    assignParticle(0.1);
     for(auto& cell : m_cells){
         cell.allocatevar();
     }
@@ -101,9 +101,9 @@ void Run::initialize(int argc, char **argv)
     }
 }
 
-void Run::assignParticle()
+void Run::assignParticle(const double& coef)
 {
-    numparticlelocal = N_Particle / numprocs;
+    numparticlelocal = static_cast<int>(N_Particle * coef) / numprocs;
     m_particles.reserve(numparticlelocal);
     if(N_Particle % (N1 * N2 * N3) != 0){
         std::cerr <<"particle can't be devided by mesh" << std::endl;
@@ -223,18 +223,18 @@ void Run::ressignParticle()
     int N_particle_local = m_particles.size();
     int N_particle_global {};
     MPI_Reduce(&N_particle_local, &N_particle_global, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (myid == 0) {
-        std::cout << "Total number of particles: " << N_particle_global << std::endl;
-        std::cout << "Classify Time: " 
-              << std::chrono::duration<double, std::milli>(t_classify_end - t_classify_start).count() 
-              << " ms" << std::endl;
-        std::cout << "Exchange Time: " 
-              << std::chrono::duration<double, std::milli>(t_exchange_end - t_exchange_start).count() 
-              << " ms" << std::endl;
-        std::cout << "Assign Time: " 
-              << std::chrono::duration<double, std::milli>(t_assign_end - t_assign_start).count() 
-              << " ms" << std::endl;
-    }
+    // if (myid == 0) {
+    //     std::cout << "Total number of particles: " << N_particle_global << std::endl;
+    //     std::cout << "Classify Time: " 
+    //           << std::chrono::duration<double, std::milli>(t_classify_end - t_classify_start).count() 
+    //           << " ms" << std::endl;
+    //     std::cout << "Exchange Time: " 
+    //           << std::chrono::duration<double, std::milli>(t_exchange_end - t_exchange_start).count() 
+    //           << " ms" << std::endl;
+    //     std::cout << "Assign Time: " 
+    //           << std::chrono::duration<double, std::milli>(t_assign_end - t_assign_start).count() 
+    //           << " ms" << std::endl;
+    // }
 }
 
 void Run::collision()

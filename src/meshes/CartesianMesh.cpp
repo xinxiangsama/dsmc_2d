@@ -151,7 +151,7 @@ void CartesianMesh::cutcell(Geom *geom)
 
                 double missVolume = (area1 + area2) * element->getL3();
 
-                // element->setvolume(element->getvolume() - missVolume);
+                element->setvolume(element->getvolume() - missVolume);
                 break;
             }
             case 3: {
@@ -159,7 +159,7 @@ void CartesianMesh::cutcell(Geom *geom)
                 auto h = abs((v1 - P1).dot(normal));
                 auto d = (P1 - P2).norm();
                 auto leftVolume = 0.5 * h * d * element->getL3();
-                // element->setvolume(leftVolume);
+                element->setvolume(leftVolume);
                 break;
             }
             default:

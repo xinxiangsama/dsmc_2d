@@ -22,3 +22,12 @@ void InletBoundary::InjetParticle(std::vector<Particle>& particles)
     }
 
 }
+
+bool InletBoundary::isHit(const Particle::Coord &position) const
+{
+    return false;
+}
+
+void InletBoundary::Reflect(Particle *particle, const double &dt) const
+{
+}

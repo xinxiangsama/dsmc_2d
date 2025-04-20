@@ -29,7 +29,7 @@ public:
     /*============Finalize===========*/
     void finalize();
 
-    void assignParticle();
+    void assignParticle(const double& coef);
     void particlemove();
     void ressignParticle();
     void collision();
