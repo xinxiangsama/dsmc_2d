@@ -126,6 +126,7 @@ void Run::assignParticle(const double& coef)
             auto velocity = randomgenerator->MaxwellDistribution(Vstd);
             velocity(0) += V_jet;
             m_particles.emplace_back(mass, Eigen::Vector3d{x, y, z}, velocity);
+            std::prev(m_particles.end())->setcellID(m_mesh->getIndex(Eigen::Vector3d{x, y, z}));
             cell.insertparticle(&(*std::prev(m_particles.end())));
         }
     }
@@ -137,6 +138,8 @@ void Run::particlemove()
     for(auto& cell : m_cells){
         auto particles = cell.getparticles();
         for(auto& particle : particles){
+            // cell.comtimetokenleaving(particle); 
+            // auto dt = cell.getdt();
             particle->Move(tau);
 
             if(cell.ifcut()){
@@ -167,6 +170,19 @@ void Run::particlemove()
             if(wall4->isHit(particle->getposition())){
                 wall4->Reflect(particle, tau);
             }
+
+            // auto oldcellID = particle->getcellID();
+            // auto newcellId = m_mesh->getIndex(particle->getposition());
+            // if(oldcellID != particle->getcellID()){ // particke leave this cell and perform vts
+            //     auto tmove = particle->gettmove();
+            //     if(tmove <= tau){
+            //         auto t_remain = (tau - tmove);
+            //         auto p1 = particle->getposition() - t_remain * particle->getvelocity();
+            //         t_remain *= m_cells[newcellId].getdt() / cell.getdt();
+            //         auto p2 = p1 + t_remain * particle->getvelocity();
+            //         particle->setposition(p2);
+            //     }
+            // }
         }
     }
 }
@@ -255,7 +271,9 @@ void Run::collision()
 void Run::assignParticle2cell()
 {
     for(auto& particle : m_particles){
-        m_cells[m_mesh->getIndex(particle.getposition())].insertparticle(&particle);
+        auto cellID = m_mesh->getIndex(particle.getposition());
+        particle.setcellID(cellID);
+        m_cells[cellID].insertparticle(&particle);
     }
 }
 
@@ -298,8 +316,13 @@ void Run::solver()
         if (iter % 50 == 0) {
             for(auto& cell : m_cells){
                 cell.sample();
+                // cell.VTS();
             }
             m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
+
+            if(myid == 0){
+                m_output->Write2VTK("./res/step" + std::to_string(iter) + ".vts");
+            }
         }
     }
     if(myid == 0){

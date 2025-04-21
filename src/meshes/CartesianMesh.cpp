@@ -339,3 +339,8 @@ const double &CartesianMesh::getLocalLengthZ()
 {
     return m_LocalLengthZ;
 }
+
+const std::vector<std::unique_ptr<Element>> &CartesianMesh::getElements()
+{
+    return m_elements;
+}

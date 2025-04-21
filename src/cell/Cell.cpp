@@ -1,5 +1,4 @@
 #include "Cell.h"
-#include "../Param.h"
 #include <iostream>
 extern double Vstd;
 extern double Vmax;
@@ -33,6 +32,10 @@ const std::vector<std::shared_ptr<Cell>> &Cell::getchildren() const
 const int Cell::getCollisionNum()
 {
     return N_collision;
+}
+const double &Cell::getdt()
+{
+    return m_dt;
 }
 bool Cell::ifcut()
 {
@@ -68,6 +71,36 @@ void Cell::removeallparticles()
 {
     m_particles.clear();
     N_particles = 0;
+}
+void Cell::VTS()
+{   
+    auto cellvolume = m_element->getvolume();
+    auto temperature = m_phase->gettemperature();
+    auto vnorm = m_phase->getvelocity().norm();
+    m_mfp = 1 / (sqrt(2) * (N_particles / cellvolume) * M_PI * diam * diam);
+    m_mps = sqrt(2 * boltz * temperature / mass);
+    m_dt = 0.5 * (m_mfp / (vnorm + m_mps));
+
+    m_weight = Fn * m_dt / tau;
+}
+void Cell::comtimetokenleaving(Particle *particle)
+{
+    auto m_L1 = m_element->getL1();
+    auto m_L2 = m_element->getL2();
+    double xmin = m_position(0) - 0.5 * m_L1;
+    double xmax = m_position(0) + 0.5 * m_L1;
+    double ymin = m_position(1) - 0.5 * m_L2;
+    double ymax = m_position(1) + 0.5 * m_L2;
+
+    auto u = particle->getvelocity()[0];
+    auto x = particle->getposition()[0];
+    auto v = particle->getvelocity()[1];
+    auto y = particle->getposition()[1];
+
+    auto tx = u > 0 ? (xmax - x) / u : (xmin - x) / u;
+    auto ty = v > 0 ? (ymax - y) / v : (ymin - y) / v;
+
+    particle->settmove(std::min<double>(tx, ty));
 }
 void Cell::collision()
 {   

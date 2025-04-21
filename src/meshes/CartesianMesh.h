@@ -53,6 +53,7 @@ public:
     const double& getLocalLengthX() override;
     const double& getLocalLengthY() override;
     const double& getLocalLengthZ() override;
+    const std::vector<std::unique_ptr<Element>>& getElements();
 protected:
     int m_numberCellsXGlobal = 0; // number of cells in the global domain
     int m_numberCellsYGlobal = 0; // number of cells in the global domain

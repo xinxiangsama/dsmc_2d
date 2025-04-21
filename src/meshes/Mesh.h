@@ -55,4 +55,5 @@ public:
     virtual const double& getLocalLengthX() {};
     virtual const double& getLocalLengthY() {};
     virtual const double& getLocalLengthZ() {};
+    virtual const std::vector<std::unique_ptr<Element>>& getElements() {};
 };

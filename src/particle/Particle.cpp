@@ -16,6 +16,14 @@ const Particle::Coord &Particle::getvelocity()
 {
     return m_velocity;
 }
+const int &Particle::getcellID()
+{
+    return m_cellID;
+}
+const double &Particle::gettmove()
+{
+    return t_move;
+}
 void Particle::setmass(const double &mass)
 {
     m_mass = mass;
@@ -27,6 +35,16 @@ void Particle::setposition(const Coord &position)
 void Particle::setvelocity(const Coord &velocity)
 {
     m_velocity = velocity;
+}
+
+void Particle::settmove(const double &t)
+{
+    t_move = t;
+}
+
+void Particle::setcellID(const int &id)
+{
+    m_cellID = id;
 }
 
 void Particle::Move(const double &dt)

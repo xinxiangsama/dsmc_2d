@@ -15,7 +15,7 @@ static constexpr double VSS_coe = 1.0;
 static constexpr double L1 = 32.0e-2; //横向维度 (m)
 static constexpr double L2 = 16.0e-2; //纵向维度 (m)
 static constexpr double L3 = 4.0e-4; 
-static constexpr double Rho= 1.0e-5 ; // 流场密度 kg/m^3 
+static constexpr double Rho= 1.0e-4 ; // 流场密度 kg/m^3 
 static constexpr double T = 273.0; // temperature (K)
 
 //=================圆柱参数========================
