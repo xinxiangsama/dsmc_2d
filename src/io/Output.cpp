@@ -75,6 +75,8 @@ void Output::Write2VTK(const std::string &filename)
     auto offsetY = m_run->m_mesh->getoffsetY();
     auto dx = m_run->m_mesh->getUnidX();
     auto dy = m_run->m_mesh->getUnidX();
+    auto myid = m_run->myid;
+    auto numprocs = m_run->numprocs;
 
     auto& local_elements = m_run->m_mesh->getElements();
     // create a mesh obj
@@ -83,22 +85,15 @@ void Output::Write2VTK(const std::string &filename)
 
     // create a points set
     vtkSmartPointer<vtkPoints> local_points = vtkSmartPointer<vtkPoints>::New();
-    // for(auto& element : local_elements){
-    //     auto& vertices = element->getvertices();
+    for(auto& element : local_elements){
+        auto& vertices = element->getvertices();
         
-    //     auto x = vertices[0]->getPosition()[0];
-    //     auto y = vertices[0]->getPosition()[1];
-    //     double z = 0.0;
-    //     local_points->InsertNextPoint(x, y, z);
-    // }
-    for (int j = 0; j < N1local; ++j) {
-        for (int i = 0; i < N2local; ++i) {
-            double x = i * dx;
-            double y = j * dy;
-            double z = 0.0;
-            local_points->InsertNextPoint(x, y, z);
-        }
+        auto x = vertices[0]->getPosition()[0];
+        auto y = vertices[0]->getPosition()[1];
+        double z = 0.0;
+        local_points->InsertNextPoint(x, y, z);
     }
+
     local_grid->SetPoints(local_points);
 
     std::vector<double> U(N1local * N2local, 0.0);
@@ -141,12 +136,37 @@ void Output::Write2VTK(const std::string &filename)
     addScalarField(T, "T");
     addScalarField(Rho, "Rho");
 
-    // 写入 VTK 文件
-    vtkSmartPointer<vtkXMLStructuredGridWriter> writer = vtkSmartPointer<vtkXMLStructuredGridWriter>::New();
-    writer->SetFileName(filename.c_str());
-    // writer->SetDataModeToAscii(); 
-    writer->SetDataModeToBinary();  
-    writer->SetInputData(local_grid);
-    writer->Write();
+    // // wtite in vtk
+    // vtkSmartPointer<vtkXMLStructuredGridWriter> writer = vtkSmartPointer<vtkXMLStructuredGridWriter>::New();
+    // writer->SetFileName(filename.c_str());
+    // // writer->SetDataModeToAscii(); 
+    // writer->SetDataModeToBinary();  
+    // writer->SetInputData(local_grid);
+    // writer->Write();
 
+    // set local grid scale
+    int local_extent[6] = {
+        offsetX, offsetX + static_cast<int>(N1local) - 1,
+        offsetY, offsetY + static_cast<int>(N2local) - 1,
+        0, 0
+    };
+
+    local_grid->SetExtent(local_extent);
+
+   // Write the local .vts file
+   vtkSmartPointer<vtkXMLStructuredGridWriter> writer = vtkSmartPointer<vtkXMLStructuredGridWriter>::New();
+   writer->SetFileName((filename + "_" + std::to_string(myid) + ".vts").c_str());
+   writer->SetDataModeToBinary();
+   writer->SetInputData(local_grid);
+   writer->Write();
+
+   // Write the parallel .pvts file (only on the root process)
+   if (myid == 0) {
+        auto pwriter =  vtkSmartPointer<vtkXMLPStructuredGridWriter>::New();
+        pwriter->SetFileName((filename + ".pvts").c_str());
+        pwriter->SetNumberOfPieces(numprocs);
+        pwriter->SetInputData(local_grid);
+        pwriter->SetDataModeToBinary();
+        pwriter->Update();
+    }
 }

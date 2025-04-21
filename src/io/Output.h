@@ -9,6 +9,7 @@
 #include <vtkDoubleArray.h>
 #include <vtkPointData.h>
 #include <vtkXMLStructuredGridWriter.h>
+#include <vtkXMLPStructuredGridWriter.h>
 
 #include <string>
 #include <ostream>

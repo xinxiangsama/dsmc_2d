@@ -49,6 +49,10 @@ std::array<std::unique_ptr<Vertice>, 4> &Element::getvertices()
 {
     return m_vertices;
 }
+std::vector<std::shared_ptr<Element>> &Element::getchildren()
+{
+    return m_children;
+}
 bool Element::ifcut()
 {   
     int numwall {}; 
@@ -137,3 +141,34 @@ bool Element::ifContain2d(const Eigen::Vector2d &P)
     return onLeft || onRight || onBottom || onTop;
 }
 
+void Element::genAMRmesh(const int &Nx, const int &Ny, const double& Lx, const double& Ly)
+{
+    double xmin = m_position(0) - 0.5 * m_L1;
+    double xmax = m_position(0) + 0.5 * m_L1;
+    double ymin = m_position(1) - 0.5 * m_L2;
+    double ymax = m_position(1) + 0.5 * m_L2;
+
+    for (int i = 0; i < Nx; ++i)
+    {
+        for (int j = 0; j < Ny; ++j)
+        {
+            Eigen::Vector2d position;
+            position.x() = xmin + (i + 0.5) * Lx;
+            position.y() = ymin + (j + 0.5) * Ly;
+
+            auto subElement = std::make_shared<Element>();
+            subElement->setposition(position);
+            subElement->setL1(Lx);
+            subElement->setL2(Ly);
+            subElement->setL3(m_L3);
+            subElement->setvolume(Lx * Ly * m_L3);
+
+            m_children.emplace_back(std::move(subElement));
+        }
+    }
+}
+
+bool Element::isIntersecting(const Element const *other) const
+{
+    return false;
+}

@@ -313,16 +313,13 @@ void Run::solver()
             ss << "========================================\n";
             std::cout << ss.str();
         }
-        if (iter % 50 == 0) {
+        if (iter % 10 == 0) {
             for(auto& cell : m_cells){
                 cell.sample();
                 // cell.VTS();
             }
             m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
-
-            if(myid == 0){
-                m_output->Write2VTK("./res/step" + std::to_string(iter) + ".vts");
-            }
+            // m_output->Write2VTK("./res/step" + std::to_string(iter));
         }
     }
     if(myid == 0){

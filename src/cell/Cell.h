@@ -7,6 +7,12 @@
 #include <memory>
 #include <vector>
 
+enum class AMRlevel{
+    Lv1,
+    Lv2,
+    Lv3
+};
+
 class Cell
 {
 public:
@@ -18,16 +24,19 @@ public:
     const Coord& getposition() const;
     const std::vector<Particle* >& getparticles() const;
     const Phase* getphase() const;
-    const Element* getelement() const;
+    Element* getelement() const;
     const Coord& getindex() const;
     const std::vector<std::shared_ptr<Cell>>& getchildren() const;
     const int getCollisionNum();
     const double& getdt();
     bool ifcut();
+    const double& getmfp();
+    const AMRlevel& getAMRlevel();
     // Modifiers
     void setposition(const Coord& position);
     void setelement(Element* element);
     void setindex(const Coord& index);
+    void setAMRlevel(const AMRlevel& level);
 
     // Functions
     void allocatevar();
@@ -36,6 +45,10 @@ public:
     void removeallparticles();
     void VTS(); // variable time step algorithm
     void comtimetokenleaving(Particle* particle);
+    void genAMRmesh();
+    void insertchildern(std::shared_ptr<Cell> child);
+    double findMaxmfpOverAllchild();
+    double findMinmfpOverL2child(std::shared_ptr<Cell> childcell, std::vector<std::shared_ptr<Cell>>& oldchildcells);
 
     // collision
     virtual void collision();
@@ -47,7 +60,6 @@ protected:
     std::vector<Particle*> m_particles;
     std::shared_ptr<Phase> m_phase;
     Element* m_element;
-    std::vector<std::shared_ptr<Cell>> m_children;
     size_t N_particles {};
     size_t N_collision {};
     double Mcand_r {}; // the resident caused buy turn double to int
@@ -57,4 +69,9 @@ protected:
     double m_mps {}; // most probable speed
     double m_dt {tau}; // local time step
     size_t m_weight {Fn}; // particle weight
+
+
+    // AMR part
+    std::vector<std::shared_ptr<Cell>> m_children;
+    AMRlevel m_level {AMRlevel::Lv1};
 };

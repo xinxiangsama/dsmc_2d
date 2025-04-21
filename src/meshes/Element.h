@@ -24,6 +24,7 @@ public:
     const std::vector<std::unique_ptr<Segment>>& getsegments() const;
     const std::vector<std::unique_ptr<LargrangianPoint>>& getIntersectionPs() const;
     std::array<std::unique_ptr<Vertice>, 4>& getvertices();
+    std::vector<std::shared_ptr<Element>>& getchildren();
     bool ifcut();
     // Note: The index should be in the range [0, 3] for a 2D element
     // Modifiers
@@ -38,6 +39,9 @@ public:
     void insertIntersectionP(Eigen::Vector2d& P);
     bool ifContain2d(const Eigen::Vector2d& P);
 
+    // AMR
+    void genAMRmesh(const int& Nx, const int& Ny, const double& Lx, const double& Ly);
+    bool isIntersecting(const Element* const other) const;
 protected:
     Coord m_position; // Position of the element
     double m_L1; // Length in the first dimension
@@ -50,4 +54,7 @@ protected:
     std::array<std::unique_ptr<Vertice>, 4> m_vertices;
     std::vector<std::unique_ptr<Segment>> m_segments;
     std::vector<std::unique_ptr<LargrangianPoint>> m_intersectionPs;
+
+    // AMR part
+    std::vector<std::shared_ptr<Element>> m_children;
 };
