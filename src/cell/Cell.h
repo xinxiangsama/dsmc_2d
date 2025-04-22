@@ -46,6 +46,7 @@ public:
     void VTS(); // variable time step algorithm
     void comtimetokenleaving(Particle* particle);
     void genAMRmesh();
+    void sortParticle2children();
     void insertchildern(std::shared_ptr<Cell> child);
     double findMaxmfpOverAllchild();
     double findMinmfpOverL2child(std::shared_ptr<Cell> childcell, std::vector<std::shared_ptr<Cell>>& oldchildcells);

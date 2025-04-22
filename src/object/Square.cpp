@@ -11,48 +11,48 @@ Square::Square(const int& numPerSide, const LargrangianPoint::Coord& center, con
 
 void Square::Initialize()
 {   
-    // m_points.resize(4);
-    // m_points[0].setPosition(m_center + Eigen::Vector3d({-m_halfLength, -m_halfLength, 0.0}));
-    // m_points[1].setPosition(m_center + Eigen::Vector3d({m_halfLength, -m_halfLength, 0.0}));
-    // m_points[2].setPosition(m_center + Eigen::Vector3d({m_halfLength, m_halfLength, 0.0}));
-    // m_points[3].setPosition(m_center + Eigen::Vector3d({-m_halfLength, m_halfLength, 0.0}));
+    m_points.resize(4);
+    m_points[0].setPosition(m_center + Eigen::Vector3d({-m_halfLength, -m_halfLength, 0.0}));
+    m_points[1].setPosition(m_center + Eigen::Vector3d({m_halfLength, -m_halfLength, 0.0}));
+    m_points[2].setPosition(m_center + Eigen::Vector3d({m_halfLength, m_halfLength, 0.0}));
+    m_points[3].setPosition(m_center + Eigen::Vector3d({-m_halfLength, m_halfLength, 0.0}));
 
-    m_points.resize(numLagrangianPoints);
-    m_segments.resize(numLagrangianPoints);
+    // m_points.resize(numLagrangianPoints);
+    // m_segments.resize(numLagrangianPoints);
 
-    // 计算每条边的点间距
-    double edgeSpacing = 2.0 * m_halfLength / (m_numPerSide - 1);
+    // // 计算每条边的点间距
+    // double edgeSpacing = 2.0 * m_halfLength / (m_numPerSide - 1);
 
-    // 起始点：左下角
-    int idx = 0;
+    // // 起始点：左下角
+    // int idx = 0;
 
-    // Bottom edge (left to right)
-    for (int i = 0; i < m_numPerSide; ++i)
-    {
-        double x = -m_halfLength + i * edgeSpacing;
-        m_points[idx++].setPosition(m_center + Eigen::Vector3d(x, -m_halfLength, 0));
-    }
+    // // Bottom edge (left to right)
+    // for (int i = 0; i < m_numPerSide; ++i)
+    // {
+    //     double x = -m_halfLength + i * edgeSpacing;
+    //     m_points[idx++].setPosition(m_center + Eigen::Vector3d(x, -m_halfLength, 0));
+    // }
 
-    // Right edge (bottom to top)
-    for (int i = 1; i < m_numPerSide; ++i)
-    {
-        double y = -m_halfLength + i * edgeSpacing;
-        m_points[idx++].setPosition(m_center + Eigen::Vector3d(m_halfLength, y, 0));
-    }
+    // // Right edge (bottom to top)
+    // for (int i = 1; i < m_numPerSide; ++i)
+    // {
+    //     double y = -m_halfLength + i * edgeSpacing;
+    //     m_points[idx++].setPosition(m_center + Eigen::Vector3d(m_halfLength, y, 0));
+    // }
 
-    // Top edge (right to left)
-    for (int i = 1; i < m_numPerSide; ++i)
-    {
-        double x = m_halfLength - i * edgeSpacing;
-        m_points[idx++].setPosition(m_center + Eigen::Vector3d(x, m_halfLength, 0));
-    }
+    // // Top edge (right to left)
+    // for (int i = 1; i < m_numPerSide; ++i)
+    // {
+    //     double x = m_halfLength - i * edgeSpacing;
+    //     m_points[idx++].setPosition(m_center + Eigen::Vector3d(x, m_halfLength, 0));
+    // }
 
-    // Left edge (top to bottom)
-    for (int i = 1; i < m_numPerSide - 1; ++i)
-    {
-        double y = m_halfLength - i * edgeSpacing;
-        m_points[idx++].setPosition(m_center + Eigen::Vector3d(-m_halfLength, y, 0));
-    }
+    // // Left edge (top to bottom)
+    // for (int i = 1; i < m_numPerSide - 1; ++i)
+    // {
+    //     double y = m_halfLength - i * edgeSpacing;
+    //     m_points[idx++].setPosition(m_center + Eigen::Vector3d(-m_halfLength, y, 0));
+    // }
 
     // // 设置 segments 与点之间的连接关系
     // for (int i = 0; i < numLagrangianPoints; ++i)

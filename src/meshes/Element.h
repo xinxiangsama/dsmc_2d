@@ -38,10 +38,11 @@ public:
     void insertsegment(std::unique_ptr<Segment>& segment);
     void insertIntersectionP(Eigen::Vector2d& P);
     bool ifContain2d(const Eigen::Vector2d& P);
+    bool ifContain2d(const Eigen::Vector3d& P);
 
     // AMR
     void genAMRmesh(const int& Nx, const int& Ny, const double& Lx, const double& Ly);
-    bool isIntersecting(const Element* const other) const;
+    bool isIntersecting(const Element* other) const;
 protected:
     Coord m_position; // Position of the element
     double m_L1; // Length in the first dimension

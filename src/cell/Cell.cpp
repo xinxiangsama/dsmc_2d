@@ -89,11 +89,11 @@ void Cell::VTS()
     auto cellvolume = m_element->getvolume();
     auto temperature = m_phase->gettemperature();
     auto vnorm = m_phase->getvelocity().norm();
-    m_mfp = 1 / (sqrt(2) * (N_particles / cellvolume) * M_PI * diam * diam);
+    m_mfp = 1 / (sqrt(2) * (N_particles / cellvolume) * M_PI * diam * diam) * pow(temperature / T, Vtl - 0.5);
     m_mps = sqrt(2 * boltz * temperature / mass);
     m_dt = 0.5 * (m_mfp / (vnorm + m_mps));
 
-    m_weight = Fn * m_dt / tau;
+    // m_weight = Fn * m_dt / tau;
 }
 void Cell::comtimetokenleaving(Particle *particle)
 {
@@ -146,8 +146,11 @@ void Cell::genAMRmesh()
         Chy = L1y / std::ceil(L1y / (Maxmfp * Chy));
         L2y = Chy * Maxmfp; 
     }
-    auto NxLv2 = static_cast<int>(L1x / L2x);
-    auto NyLv2 = static_cast<int>(L1y / L2y);
+    // auto NxLv2 = static_cast<int>(L1x / L2x);
+    // auto NyLv2 = static_cast<int>(L1y / L2y);
+    auto NxLv2 = 2;
+    auto NyLv2 = 2;
+    
     // step 3 : generate a uniform new L2 Cartesian grid  within each L1 cell
     m_element->genAMRmesh(NxLv2, NyLv2, L2x, L2y);
     auto& Lv2Elements = m_element->getchildren();
@@ -156,7 +159,7 @@ void Cell::genAMRmesh()
             int index = j + i * NyLv2;
             auto childcell = std::make_shared<Cell>();
             auto& element = Lv2Elements[index];
-            childcell->setindex({i, j});
+            childcell->setindex({i, j, 0});
             childcell->setelement(element.get());
             childcell->setposition(element->getposition());
             childcell->setAMRlevel(AMRlevel::Lv2);
@@ -193,7 +196,7 @@ void Cell::genAMRmesh()
                 int index = j + i * NyLv3;
                 auto L3cell = std::make_shared<Cell>();
                 auto& element = Lv3Elements[index];
-                L3cell->setindex({i, j});
+                L3cell->setindex({i, j, 0});
                 L3cell->setelement(element.get());
                 L3cell->setposition(element->getposition());
                 L3cell->setAMRlevel(AMRlevel::Lv3);
@@ -202,6 +205,19 @@ void Cell::genAMRmesh()
         }
     }
     
+}
+void Cell::sortParticle2children()
+{
+    if(!m_children.empty()){
+        for(auto& child : m_children){
+            for(auto& particle : m_particles){
+                if(child->getelement()->ifContain2d(particle->getposition())){
+                    child->insertparticle(particle);
+                }
+            }
+            child->sortParticle2children();
+        }
+    }
 }
 void Cell::insertchildern(std::shared_ptr<Cell> child)
 {

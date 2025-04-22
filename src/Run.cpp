@@ -41,7 +41,7 @@ void Run::initialize(int argc, char **argv)
     m_mesh->setnumberCellsYGlobal(N2);
     m_mesh->setnumberCellsZGlobal(N3);
 
-    m_geom = std::make_unique<Circle>(128, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    m_geom = std::make_unique<Circle>(3, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     // m_geom = std::make_unique<Square>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     m_geom->Initialize();
 
@@ -316,7 +316,8 @@ void Run::solver()
         if (iter % 10 == 0) {
             for(auto& cell : m_cells){
                 cell.sample();
-                // cell.VTS();
+                cell.VTS();
+                cell.genAMRmesh();
             }
             m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
             // m_output->Write2VTK("./res/step" + std::to_string(iter));

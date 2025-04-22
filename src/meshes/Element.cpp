@@ -141,6 +141,19 @@ bool Element::ifContain2d(const Eigen::Vector2d &P)
     return onLeft || onRight || onBottom || onTop;
 }
 
+bool Element::ifContain2d(const Eigen::Vector3d &P)
+{
+    double xmin = m_position(0) - 0.5 * m_L1;
+    double xmax = m_position(0) + 0.5 * m_L1;
+    double ymin = m_position(1) - 0.5 * m_L2;
+    double ymax = m_position(1) + 0.5 * m_L2;
+
+    auto x = P.x();
+    auto y = P.y();
+
+    return !((x < xmin) || (x > xmax) || (y < ymin) || (y > ymax));
+}
+
 void Element::genAMRmesh(const int &Nx, const int &Ny, const double& Lx, const double& Ly)
 {
     double xmin = m_position(0) - 0.5 * m_L1;
@@ -152,9 +165,10 @@ void Element::genAMRmesh(const int &Nx, const int &Ny, const double& Lx, const d
     {
         for (int j = 0; j < Ny; ++j)
         {
-            Eigen::Vector2d position;
+            Eigen::Vector3d position;
             position.x() = xmin + (i + 0.5) * Lx;
             position.y() = ymin + (j + 0.5) * Ly;
+            position.z() = m_L3 * 0.5;
 
             auto subElement = std::make_shared<Element>();
             subElement->setposition(position);
@@ -168,7 +182,7 @@ void Element::genAMRmesh(const int &Nx, const int &Ny, const double& Lx, const d
     }
 }
 
-bool Element::isIntersecting(const Element const *other) const
+bool Element::isIntersecting(const Element *other) const
 {
     return false;
 }

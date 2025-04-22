@@ -35,6 +35,7 @@ void Output::Write2HDF5(const std::string &filename)
     H5::DataSet dataset_P = file.createDataSet("P", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
     H5::DataSet dataset_T = file.createDataSet("T", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
     H5::DataSet dataset_Rho = file.createDataSet("Rho", H5::PredType::NATIVE_DOUBLE, global_dataspace, plist);
+    H5::DataSet dataset_numchild = file.createDataSet("Numchild", H5::PredType::NATIVE_INT, global_dataspace, plist);
 
     std::vector<double> U(N1local * N2local, 0.0);
     std::vector<double> V(N1local * N2local, 0.0);
@@ -42,6 +43,7 @@ void Output::Write2HDF5(const std::string &filename)
     std::vector<double> P(N1local * N2local, 0.0);
     std::vector<double> T(N1local * N2local, 0.0);
     std::vector<double> Rho(N1local * N2local, 0.0);
+    std::vector<int> Numchild(N1local * N2local, 0);
     for (size_t i = 0; i < N1local; ++i){
         for (size_t j = 0; j < N2local; ++j){
             auto cell = m_run->m_cells[i * N2local + j];
@@ -54,6 +56,7 @@ void Output::Write2HDF5(const std::string &filename)
             P[i * N2local + j] = phase->getpressure();
             T[i * N2local + j] = phase->gettemperature();
             Rho[i * N2local + j] = phase->getdensity();
+            Numchild[i * N2local + j] = cell.getchildren().size();
         }
     }
 
@@ -63,6 +66,7 @@ void Output::Write2HDF5(const std::string &filename)
     dataset_P.write(P.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);
     dataset_T.write(T.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);
     dataset_Rho.write(Rho.data(), H5::PredType::NATIVE_DOUBLE, local_dataspace, global_dataspace);
+    dataset_numchild.write(Numchild.data(), H5::PredType::NATIVE_INT, local_dataspace, global_dataspace);
 }
 
 void Output::Write2VTK(const std::string &filename)
