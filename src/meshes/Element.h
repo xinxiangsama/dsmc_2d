@@ -38,7 +38,7 @@ public:
     void insertsegment(std::unique_ptr<Segment>& segment);
     void insertIntersectionP(Eigen::Vector2d& P);
     bool ifContain2d(const Eigen::Vector2d& P);
-    bool ifContain2d(const Eigen::Vector3d& P);
+    bool ifContain(const Eigen::Vector3d& P);
 
     // AMR
     void genAMRmesh(const int& Nx, const int& Ny, const double& Lx, const double& Ly);

@@ -82,7 +82,7 @@ void Run::initialize(int argc, char **argv)
     /*output part*/
     m_output = std::make_unique<Output>(this);
     /*Initial particle phase*/
-    assignParticle(0.1);
+    assignParticle(0.5);
     for(auto& cell : m_cells){
         cell.allocatevar();
     }
@@ -292,7 +292,7 @@ void Run::solver()
             auto t_ressign_end = std::chrono::high_resolution_clock::now();
 
             auto t_collision_start = std::chrono::high_resolution_clock::now();
-            collision();
+            // collision();
             auto t_collision_end = std::chrono::high_resolution_clock::now();
         
             auto t_end = std::chrono::high_resolution_clock::now();
@@ -313,11 +313,12 @@ void Run::solver()
             ss << "========================================\n";
             std::cout << ss.str();
         }
-        if (iter % 10 == 0) {
+        if (iter % 10 == 0 && iter != 0) {
             for(auto& cell : m_cells){
                 cell.sample();
                 cell.VTS();
                 cell.genAMRmesh();
+                cell.sortParticle2children();
             }
             m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
             // m_output->Write2VTK("./res/step" + std::to_string(iter));

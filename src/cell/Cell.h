@@ -45,6 +45,7 @@ public:
     void removeallparticles();
     void VTS(); // variable time step algorithm
     void comtimetokenleaving(Particle* particle);
+    void clearChildern();
     void genAMRmesh();
     void sortParticle2children();
     void insertchildern(std::shared_ptr<Cell> child);

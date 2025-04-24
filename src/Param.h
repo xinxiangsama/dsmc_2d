@@ -24,8 +24,8 @@ static constexpr double Center_x = 8.0e-2; //圆柱中心横坐标
 static constexpr double Center_y = 8.0e-2; //圆柱中心纵坐标
 static constexpr double V_jet = 1500.0;//来流速度
 //===============正交结构网格==================
-static constexpr unsigned int N1 = 800; //横向网格数
-static constexpr unsigned int N2 = 400; // 纵向网格数
+static constexpr unsigned int N1 = 200; //横向网格数
+static constexpr unsigned int N2 = 100; // 纵向网格数
 static constexpr unsigned int N3 = 1; // 纵向网格数
 
 //=============一些constexper=========

@@ -141,7 +141,7 @@ bool Element::ifContain2d(const Eigen::Vector2d &P)
     return onLeft || onRight || onBottom || onTop;
 }
 
-bool Element::ifContain2d(const Eigen::Vector3d &P)
+bool Element::ifContain(const Eigen::Vector3d &P)
 {
     double xmin = m_position(0) - 0.5 * m_L1;
     double xmax = m_position(0) + 0.5 * m_L1;
@@ -151,7 +151,8 @@ bool Element::ifContain2d(const Eigen::Vector3d &P)
     auto x = P.x();
     auto y = P.y();
 
-    return !((x < xmin) || (x > xmax) || (y < ymin) || (y > ymax));
+    // return !((x < xmin) || (x > xmax) || (y < ymin) || (y > ymax));
+    return (x >= xmin && x <= xmax && y >= ymin && y <= ymax);
 }
 
 void Element::genAMRmesh(const int &Nx, const int &Ny, const double& Lx, const double& Ly)
@@ -184,5 +185,5 @@ void Element::genAMRmesh(const int &Nx, const int &Ny, const double& Lx, const d
 
 bool Element::isIntersecting(const Element *other) const
 {
-    return false;
+    return true;
 }
