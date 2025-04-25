@@ -162,10 +162,8 @@ void Element::genAMRmesh(const int &Nx, const int &Ny, const double& Lx, const d
     double ymin = m_position(1) - 0.5 * m_L2;
     double ymax = m_position(1) + 0.5 * m_L2;
 
-    for (int i = 0; i < Nx; ++i)
-    {
-        for (int j = 0; j < Ny; ++j)
-        {
+    for (int i = 0; i < Nx; ++i){
+        for (int j = 0; j < Ny; ++j){
             Eigen::Vector3d position;
             position.x() = xmin + (i + 0.5) * Lx;
             position.y() = ymin + (j + 0.5) * Ly;
@@ -177,7 +175,7 @@ void Element::genAMRmesh(const int &Nx, const int &Ny, const double& Lx, const d
             subElement->setL2(Ly);
             subElement->setL3(m_L3);
             subElement->setvolume(Lx * Ly * m_L3);
-
+            // std::cout <<"element position is : "<<position.transpose()<<std::endl;
             m_children.emplace_back(std::move(subElement));
         }
     }

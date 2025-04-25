@@ -83,6 +83,11 @@ void Cell::removeallparticles()
 {
     m_particles.clear();
     N_particles = 0;
+    if(!m_children.empty()){
+        for(auto& child : m_children){
+            child->removeallparticles();
+        }
+    }
 }
 void Cell::VTS()
 {   
@@ -139,43 +144,45 @@ void Cell::clearChildern()
 // only Level1 cell perform this
 void Cell::genAMRmesh()
 {   
-    // save old AMR mesh
-    std::vector<std::shared_ptr<Cell>> m_oldchildren;
-    // m_oldchildren.insert(m_oldchildren.end(), 
-    //                      m_children.begin(), 
-    //                      m_children.end());
+
     double L1x = m_element->getL1();
     double L1y = m_element->getL2();
     // step 1 : Loop over all L3 cells within each L1 cell, find the maximum mean free path λmax
     double Maxmfp {};
     Maxmfp = findMaxmfpOverAllchild();
-    std::cout << Maxmfp <<std::endl;
+    // std::cout << Maxmfp <<std::endl;
     // step 2 : Set the new L2 cell size to Chλmax  (here, Ch is a constant to satisfy the restriction on cell size,  usually Ch = 0.5 as discussed before).
     double Chx = 0.5;
     double Chy = 0.5;
     double L2x = Chx * Maxmfp;
     double L2y = Chy * Maxmfp;
-    int NxLv2 {};
-    int NyLv2 {};
+    int NxLv2 {std::max(static_cast<int>(L1x / L2x), 1)};
+    int NyLv2 {std::max(static_cast<int>(L1y / L2y), 1)};
     // Check if L1 can be evenly divided by L2
     if (L1x / L2x != static_cast<int>(L1x / L2x)) {
         // Adjust Ch so that L1 can be evenly divided by L2
         NxLv2 = std::ceil(L1x / L2x);
-        Chx = L1x / NxLv2;
-        L2x = Chx * Maxmfp; // Recalculate L2 with the new Ch value
+        NxLv2 = std::max(NxLv2, 1);
+        L2x = L1x / NxLv2;
     }
     // same operation for other dimention
     if (L1y / L2y != static_cast<int>(L1y / L2y)) {
         NyLv2 = std::ceil(L1y / L2y);
-        Chy = L1y / NyLv2;
-        L2y = Chy * Maxmfp; 
+        NyLv2 = std::max(NyLv2, 1);
+        L2y = L1y / NyLv2;
     }
 
+    // std::cout << "L1x: " << L1x << ", L1y: " << L1y << std::endl;
+    // std::cout <<"max mean free path among childern: "<<Maxmfp<<std::endl;
+    // std::cout << "L2x: " << L2x << ", L2y: " << L2y << std::endl;
+    // std::cout << "NxLv2: " << NxLv2 << ", NyLv2: " << NyLv2 << std::endl;
     NxLv2 = NxLv2 == 0 ? 1 : NxLv2;
     NyLv2 = NyLv2 == 0 ? 1 : NyLv2;
-    // NxLv2 = 2;
-    // NyLv2 = 2;
+
+    // save old AMR mesh
+    std::vector<std::shared_ptr<Cell>> m_oldchildren {std::move(m_children)};
     clearChildern();
+    m_children.reserve(NxLv2 * NyLv2);
     // step 3 : generate a uniform new L2 Cartesian grid  within each L1 cell
     m_element->genAMRmesh(NxLv2, NyLv2, L2x, L2y);
     auto& Lv2Elements = m_element->getchildren();
@@ -190,50 +197,59 @@ void Cell::genAMRmesh()
             childcell->setAMRlevel(AMRlevel::Lv2);
             childcell->allocatevar();
             insertchildern(childcell);
+            // std::cout <<"element position is : "<<element->getposition().transpose()<<std::endl;
         }
     }
-
-    // // step 4 : Loop over each new L2 cell and find the minimum mean free path λmin within the  new L2 cell. λmin within the new L2 cell will be obtained from λ of all the old L3  cells which intersect with the new L2 cell.
-    // for(auto& childcell : m_children){
-    //     double Minmfp {};
-    //     Minmfp = findMinmfpOverL2child(childcell, m_oldchildren);
-    //     // if(Minmfp < 1.0)
-    //     //     std::cout << Minmfp << std::endl;
-    //     double L2Chx = 0.5;
-    //     double L2Chy = 0.5;
-    //     double L3x = L2Chx * Minmfp;
-    //     double L3y = L2Chy * Minmfp;
-    //     int NxLv3 {};
-    //     int NyLv3 {};
-    //     // Check if L2 can be evenly divided by L3
-    //     if (L2x / L3x != static_cast<int>(L2x / L3x)) {
-    //         // Adjust Ch so that L2 can be evenly divided by L3
-    //         NxLv3 = std::ceil(L2x / L3x);
-    //         L2Chx = L2x / NxLv3;
-    //         L3x = L2Chx * Minmfp; // Recalculate L3 with the new Ch value
-    //     }
-    //     // same operation for other dimention
-    //     if (L2y / L3y != static_cast<int>(L2y / L3y)) {
-    //         NyLv3 = std::ceil(L2y / L3x);
-    //         L2Chy = L2y / NyLv3;
-    //         L3y = L2Chy * Minmfp; 
-    //     }
-    //     // step 5 : Set the new L3 cell size within each new L2 cell to Chλmin.
-    //     childcell->getelement()->genAMRmesh(NxLv3, NyLv3, L3x, L3y);
-    //     auto Lv3Elements = childcell->getelement()->getchildren();
-    //     for(int i = 0; i < NxLv3; ++i){
-    //         for(int j = 0; j < NyLv3; ++j){
-    //             int index = j + i * NyLv3;
-    //             auto L3cell = std::make_shared<Cell>();
-    //             auto& element = Lv3Elements[index];
-    //             L3cell->setindex({i, j, 0});
-    //             L3cell->setelement(element.get());
-    //             L3cell->setposition(element->getposition());
-    //             L3cell->setAMRlevel(AMRlevel::Lv3);
-    //             childcell->insertchildern(L3cell);
-    //         }
-    //     }
-    // }
+    if (m_children.empty()) {
+        std::cout << "NxLv2: " << NxLv2 << ", NyLv2: " << NyLv2 << std::endl;
+        std::cout << "Maxmfp: " << Maxmfp << std::endl;
+    }
+    // step 4 : Loop over each new L2 cell and find the minimum mean free path λmin within the  new L2 cell. λmin within the new L2 cell will be obtained from λ of all the old L3  cells which intersect with the new L2 cell.
+    for(auto& childcell : m_children){
+        double Minmfp {};
+        Minmfp = findMinmfpOverL2child(childcell, m_oldchildren);
+        // if(Minmfp < 1.0)
+            // std::cout << Minmfp << std::endl;
+        double L2Chx = 0.5;
+        double L2Chy = 0.5;
+        double L3x = L2Chx * Minmfp;
+        double L3y = L2Chy * Minmfp;
+        int NxLv3 {std::max(static_cast<int>(L2x / L3x), 1)};
+        int NyLv3 {std::max(static_cast<int>(L2y / L3y), 1)};
+        // Check if L2 can be evenly divided by L3
+        if (L2x / L3x != static_cast<int>(L2x / L3x)) {
+            // Adjust Ch so that L2 can be evenly divided by L3
+            NxLv3 = std::ceil(L2x / L3x);
+            NxLv3 = std::max(NxLv3, 1);
+            L3x = L2x / NxLv3;
+        }
+        // same operation for other dimention
+        if (L2y / L3y != static_cast<int>(L2y / L3y)) {
+            NyLv3 = std::ceil(L2y / L3y);
+            NyLv3 = std::max(NyLv3, 1);
+            L3y = L2y / NyLv3;
+        }
+        // step 5 : Set the new L3 cell size within each new L2 cell to Chλmin.
+        childcell->getelement()->genAMRmesh(NxLv3, NyLv3, L3x, L3y);
+        auto Lv3Elements = childcell->getelement()->getchildren();
+        for(int i = 0; i < NxLv3; ++i){
+            for(int j = 0; j < NyLv3; ++j){
+                int index = j + i * NyLv3;
+                auto L3cell = std::make_shared<Cell>();
+                auto& element = Lv3Elements[index];
+                L3cell->setindex({i, j, 0});
+                L3cell->setelement(element.get());
+                L3cell->setposition(element->getposition());
+                L3cell->setAMRlevel(AMRlevel::Lv3);
+                L3cell->allocatevar();
+                childcell->insertchildern(L3cell);
+            }
+        }
+        // std::cout <<childcell->getchildren().size()<<std::endl;
+        if (childcell->getchildren().empty()) {
+            std::cout << "NxLv3: " << NxLv3 << ", NyLv3: " << NyLv3 << std::endl;
+        }
+    }
     
 }
 void Cell::sortParticle2children()
@@ -248,7 +264,7 @@ void Cell::sortParticle2children()
         }
 
         for(auto& child : m_children){
-            std::cout << child->getparticles().size() << std::endl;
+            // std::cout << child->getparticles().size() << std::endl;
             child->sortParticle2children();
         }
     }
@@ -262,8 +278,8 @@ double Cell::findMaxmfpOverAllchild()
     if(!m_children.empty()){
         double res{-999.0};
         for(auto& child : m_children){
-            // auto Maxchild {child->findMaxmfpOverAllchild()};
-            auto Maxchild = child->getmfp();
+            auto Maxchild {child->findMaxmfpOverAllchild()};
+            // auto Maxchild = child->getmfp();
             // std::cout << Maxchild << std::endl;
             res = Maxchild > res ? Maxchild : res;
         }
@@ -274,18 +290,22 @@ double Cell::findMaxmfpOverAllchild()
 }
 double Cell::findMinmfpOverL2child(std::shared_ptr<Cell> childcell, std::vector<std::shared_ptr<Cell>>& oldchildcells)
 {   
-    double res {999.0};
-    for(auto& oldchildcell : oldchildcells){
-        auto oldLv3cells = oldchildcell->getchildren();
-        for(auto& Lv3cell : oldLv3cells){
-            if(childcell->getelement()->isIntersecting(Lv3cell->getelement())){
-                res = std::min(res, Lv3cell->getmfp());
-                std::cout << "entering loop"<<std::endl;
+    if(!oldchildcells.empty()){
+        double res {999.0};
+        for(auto& oldchildcell : oldchildcells){
+            auto oldLv3cells = oldchildcell->getchildren();
+            for(auto& Lv3cell : oldLv3cells){
+                // if(childcell->getelement()->isIntersecting(Lv3cell->getelement())){
+                    res = std::min(res, Lv3cell->getmfp());
+                    // std::cout << Lv3cell->getmfp()<<std::endl;
+                    // std::cout << "entering loop"<<std::endl;
+                // }
             }
         }
+        return res;
+    }else{
+        return 2 * childcell->getelement()->getL1();
     }
-
-    return res;
 }
 void Cell::collision()
 {   

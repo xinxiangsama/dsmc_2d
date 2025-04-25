@@ -24,6 +24,10 @@ public:
 
     void Write2HDF5(const std::string& filename);
     void Write2VTK(const std::string& filename);
+    void flattenCells(Cell* cell, std::vector<Cell*>& flatlist);
+    void WriteAMRmesh(const std::string& filename);
+    void WriteAMR2VTK(const std::string &filename);
+    void WriteParallelVTSHeader(const std::string &filename, int numprocs, int N1global, int N2global, int N1local, int N2local);
 protected:
     Run* m_run {nullptr};
 };

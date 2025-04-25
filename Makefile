@@ -61,6 +61,7 @@ clean:
 clean_result:
 	rm -rf ./res/*.h5
 	rm -rf ./res/*.vts
+	rm -rf ./res/*.vtu
 	rm -rf ./res/*.pvts
 	rm -rf ./res/*
 

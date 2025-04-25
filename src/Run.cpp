@@ -41,7 +41,7 @@ void Run::initialize(int argc, char **argv)
     m_mesh->setnumberCellsYGlobal(N2);
     m_mesh->setnumberCellsZGlobal(N3);
 
-    m_geom = std::make_unique<Circle>(3, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    m_geom = std::make_unique<Circle>(128, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     // m_geom = std::make_unique<Square>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
     m_geom->Initialize();
 
@@ -82,7 +82,7 @@ void Run::initialize(int argc, char **argv)
     /*output part*/
     m_output = std::make_unique<Output>(this);
     /*Initial particle phase*/
-    assignParticle(0.5);
+    assignParticle(0.1);
     for(auto& cell : m_cells){
         cell.allocatevar();
     }
@@ -251,6 +251,11 @@ void Run::ressignParticle()
     //           << std::chrono::duration<double, std::milli>(t_assign_end - t_assign_start).count() 
     //           << " ms" << std::endl;
     // }
+
+    for(auto& cell : m_cells){
+        cell.sortParticle2children();
+        // std::cout << "sort particle to children done!"<<std::endl;
+    }
 }
 
 void Run::collision()
@@ -292,7 +297,7 @@ void Run::solver()
             auto t_ressign_end = std::chrono::high_resolution_clock::now();
 
             auto t_collision_start = std::chrono::high_resolution_clock::now();
-            // collision();
+            collision();
             auto t_collision_end = std::chrono::high_resolution_clock::now();
         
             auto t_end = std::chrono::high_resolution_clock::now();
@@ -313,16 +318,28 @@ void Run::solver()
             ss << "========================================\n";
             std::cout << ss.str();
         }
-        if (iter % 10 == 0 && iter != 0) {
+        if (iter % 100 == 0 && iter != 0) {
             for(auto& cell : m_cells){
                 cell.sample();
                 cell.VTS();
                 cell.genAMRmesh();
-                cell.sortParticle2children();
+                // std::cout << "gen amr done!"<<std::endl;
+                // cell.sortParticle2children();
+                // std::cout << "sort particle to children done!"<<std::endl; //shouldnt be here!
             }
-            m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
-            // m_output->Write2VTK("./res/step" + std::to_string(iter));
+            // m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
+            // m_output->WriteAMRmesh("./res/step" + std::to_string(iter) +"AMRmesh"+".h5");
+            m_output->Write2VTK("./res/step" + std::to_string(iter));
+            // m_output->WriteAMR2VTK("./res/step" + std::to_string(iter) +"AMRmesh");
         }
+
+        // if(iter == 500 || iter == 1000 || iter == 2000 || iter == 4000){
+        //     for(auto& cell : m_cells){
+        //         cell.sample();
+        //         cell.VTS();
+        //         cell.genAMRmesh();
+        //     }
+        // }
     }
     if(myid == 0){
         std::cout << "Simulation Finished" << std::endl;
