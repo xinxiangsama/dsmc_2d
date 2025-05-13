@@ -75,11 +75,14 @@ void Segment::Reflect(Particle* particle, const double &dt) const
     // auto delta_tangent = mass * Fn * std::abs((velocity - new_velocity).dot(tangent));
     auto delta_tangent = mass * Fn * (v - velocity.dot(tang1));
 
-    auto delta_horizontal = mass * Fn * (velocity.x() - new_velocity.x()) / tau;
+    auto delta_horizontal = mass * Fn * (velocity.x() - new_velocity.x()); // 被碰撞粒子水平方向动量变化
+    auto delta_verticle = mass * Fn * (velocity.y() - new_velocity.y()); // 被碰撞粒子竖直方向动量变化
 
     normal_momentum += delta_normal;
     tangent_momentum += delta_tangent;
     horizontal_momentum += delta_horizontal;
+    verticle_momentum += delta_verticle;
+    collisionnum ++;
 }
 
 const double &Segment::getlength() const
@@ -122,6 +125,16 @@ const double &Segment::getHorizontalMometum()
     return horizontal_momentum;
 }
 
+const double &Segment::getVerticleMomentum()
+{
+    return verticle_momentum;
+}
+
+const int &Segment::getCollisionnum()
+{
+    return collisionnum;
+}
+
 void Segment::setlength(const double &length)
 {
     m_length = length;
@@ -160,4 +173,14 @@ void Segment::clearTangentMomemtum()
 void Segment::clearHorizontalMomentum()
 {
     horizontal_momentum = 0;
+}
+
+void Segment::clearVerticleMomentum()
+{
+    verticle_momentum = 0;
+}
+
+void Segment::clearCollisionnum()
+{
+    collisionnum = 0;
 }

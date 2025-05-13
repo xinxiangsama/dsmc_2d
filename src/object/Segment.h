@@ -20,6 +20,8 @@ using Coord = LargrangianPoint::Coord;
     const double& getNormalMomentum();
     const double& getTangentMomemtum();
     const double& getHorizontalMometum(); 
+    const double& getVerticleMomentum();
+    const int& getCollisionnum();
     // Modify
     void setlength(const double& length);
     void setsloop(const Coord& sloop);
@@ -30,6 +32,8 @@ using Coord = LargrangianPoint::Coord;
     void clearNormalMomentum();
     void clearTangentMomemtum();
     void clearHorizontalMomentum();
+    void clearVerticleMomentum();
+    void clearCollisionnum();
 
 protected:
     double m_length;
@@ -41,4 +45,6 @@ protected:
     mutable double normal_momentum {};
     mutable double tangent_momentum {};
     mutable double horizontal_momentum {};
+    mutable double verticle_momentum {};
+    mutable double collisionnum {};
 };

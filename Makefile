@@ -64,6 +64,7 @@ clean_result:
 	rm -rf ./res/*.vtu
 	rm -rf ./res/*.pvts
 	rm -rf ./res/*
+	rm -rf ./*.txt
 
 run :
 	mpiexec -np 4 --oversubscribe ./runsim

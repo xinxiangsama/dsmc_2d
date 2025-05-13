@@ -339,7 +339,8 @@ void Output::WriteForceCoeff(const std::string &filename, const int& numsteps)
 {   
     std::vector<double> X, Y, Z;
     std::vector<double> Cp, Cf, Cq;
-    double Fd {};
+    double Fd {}, Fl {};
+    double ObjectCollisionNum {};
     for(auto& cell : m_run->m_cells){
         if(cell.ifcut()){
             for (auto& segment : cell.getelement()->getsegments()) {
@@ -350,7 +351,9 @@ void Output::WriteForceCoeff(const std::string &filename, const int& numsteps)
 
                 auto cp = std::abs(segment->getNormalMomentum() / (length * L3 * tau)) / (0.5 * Rho * V_jet * V_jet);
                 auto cf = std::abs(segment->getTangentMomemtum() / (length * L3 * tau)) / (0.5 * Rho * V_jet * V_jet);
-                Fd += segment->getHorizontalMometum();
+                Fd += segment->getHorizontalMometum() / tau; // 统计阻力
+                Fl += segment->getVerticleMomentum() / tau; // 统计升力
+                ObjectCollisionNum += segment->getCollisionnum();
                 cp /= numsteps; 
                 cf /= numsteps;
 
@@ -362,8 +365,23 @@ void Output::WriteForceCoeff(const std::string &filename, const int& numsteps)
         }
     }
     Fd /= numsteps;
-    auto Cd = Fd / (0.5 * Rho * V_jet * V_jet * L3 * 2 * Radius);
-    std::cout <<"cd "<<Cd <<std::endl;
+    Fl /= numsteps;
+    ObjectCollisionNum /= numsteps;
+    auto Cd_local = Fd / (0.5 * Rho * V_jet * V_jet * L3 * 2 * Radius);
+    auto Cl_local = Fl / (0.5 * Rho * V_jet * V_jet * L3 * 2 * Radius);
+    double Cd_global {}, Cl_global {};
+    int ObjectCollisionNum_global {};
+    MPI_Reduce(&Cd_local, &Cd_global, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&Cl_local, &Cl_global, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&ObjectCollisionNum, &ObjectCollisionNum_global, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (m_run->myid == 0) {
+        std::ofstream ofs("Cd_vs_time.txt", std::ios::app);  // 追加写入
+        ofs << m_run->getStep() << " " << Cd_global <<" "<<Cl_global <<" "<<ObjectCollisionNum_global<<"\n"; // 每行：step Cd
+        ofs.close();
+
+        std::cout << "Drag Coefficient at step " << m_run->getStep() << " is: " << Cd_global << std::endl;
+    }
+
 
     hsize_t local_N {X.size()};
 

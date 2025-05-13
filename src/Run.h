@@ -27,6 +27,7 @@ public:
     void initialize(int argc, char** argv);
     /*============Main calculate loop===========*/
     void solver();
+    const int& getStep();
     /*============Finalize===========*/
     void finalize();
 
@@ -58,5 +59,6 @@ protected:
     /*output*/
     std::unique_ptr<Output> m_output;
 
+    int m_iter {};
     friend class Output;
 };

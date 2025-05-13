@@ -290,7 +290,7 @@ void Run::assignParticle2cell()
 
 void Run::solver()
 {
-    for(size_t iter = 0; iter <= 50000; ++iter){
+    for(m_iter = 0; m_iter <= 50000; ++m_iter){
 
             auto t_start = std::chrono::high_resolution_clock::now();
 
@@ -311,7 +311,7 @@ void Run::solver()
             // 输出计时统计
             std::stringstream ss;
             ss << "========================================\n";
-            ss << "Time Step: " << std::setw(3) << iter << "\n";
+            ss << "Time Step: " << std::setw(3) << m_iter << "\n";
             ss << "----------------------------------------\n";
             ss << "Particle Move: " << std::fixed << std::setprecision(3)
                << std::setw(6) << std::chrono::duration<double, std::milli>(t_particlemove_end - t_particlemove_start).count() << " ms\n";
@@ -362,7 +362,7 @@ void Run::solver()
             
         // }
 
-        if (iter % 100 == 0) {
+        if (m_iter % 100 == 0) {
             for(auto& cell : m_cells){
                 cell.sample();
                 // cell.VTS();
@@ -371,14 +371,16 @@ void Run::solver()
                 // cell.sortParticle2children();
                 // std::cout << "sort particle to children done!"<<std::endl; //shouldnt be here!
             }
-            m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
-            m_output->WriteForceCoeff("./res/wall_cp_cf_step" + std::to_string(iter) + ".h5", 100);
+            m_output->Write2HDF5("./res/step" + std::to_string(m_iter) + ".h5");
+            m_output->WriteForceCoeff("./res/wall_cp_cf_step" + std::to_string(m_iter) + ".h5", 100);
             for(auto& cell : m_cells){
             /*==========清空粒子动量变化的统计量=========*/
                 for (auto& segment : cell.getelement()->getsegments()) {
                     segment->clearNormalMomentum();
                     segment->clearTangentMomemtum();
                     segment->clearHorizontalMomentum();
+                    segment->clearVerticleMomentum();
+                    segment->clearCollisionnum();
                 }
             }
             // m_output->WriteAMRmesh("./res/step" + std::to_string(iter) +"AMRmesh"+".h5");
@@ -401,6 +403,11 @@ void Run::solver()
     if(myid == 0){
         std::cout << "Output Finished" << std::endl;
     }
+}
+
+const int &Run::getStep()
+{
+    return m_iter;
 }
 
 void Run::finalize()
