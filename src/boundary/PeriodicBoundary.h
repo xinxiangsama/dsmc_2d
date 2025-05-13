@@ -11,6 +11,9 @@ public:
     bool isHit(const Particle::Coord& position) const override;
 
     void Reflect(Particle* particle, const double& dt) const override;
+
+    virtual void resetStatistics() {};
+    virtual void outputStatistics() {};
 protected:
     Particle::Coord m_point;   // a point in boundary
     int m_direction;

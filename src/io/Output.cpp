@@ -3,6 +3,7 @@
 #include <vtkQuad.h>
 #include <vtkCellData.h>
 #include <vtkXMLUnstructuredGridWriter.h>
+#include <algorithm>
 
 Output::Output(Run *run)
 {
@@ -174,8 +175,8 @@ void Output::Write2VTK(const std::string &filename)
    // Write the local .vts file
    vtkSmartPointer<vtkXMLStructuredGridWriter> writer = vtkSmartPointer<vtkXMLStructuredGridWriter>::New();
    writer->SetFileName((filename + "_" + std::to_string(myid) + ".vts").c_str());
-    // writer->SetDataModeToBinary();
-    writer->SetDataModeToAscii(); 
+    writer->SetDataModeToBinary();
+    // writer->SetDataModeToAscii(); 
     writer->SetInputData(local_grid);
     writer->Write();
 
@@ -327,9 +328,86 @@ void Output::WriteParallelVTSHeader(const std::string &filename, int numprocs, i
 
         file << "    <Piece Extent=\"" << i_start << " " << i_end << " "
              << j_start << " " << j_end << " 0 0\" Source=\""
-             << filename << "_" << pid << ".vts\"/>" << "\n";
+             <<"."<<filename << "_" << pid << ".vts\"/>" << "\n";
     }
 
     file << "  </PStructuredGrid>" << "\n";
     file << "</VTKFile>" << std::endl;
+}
+
+void Output::WriteForceCoeff(const std::string &filename, const int& numsteps)
+{   
+    std::vector<double> X, Y, Z;
+    std::vector<double> Cp, Cf, Cq;
+    double Fd {};
+    for(auto& cell : m_run->m_cells){
+        if(cell.ifcut()){
+            for (auto& segment : cell.getelement()->getsegments()) {
+                auto left = segment->getleftpoint()->getPosition();
+                auto right = segment->getrightpoint()->getPosition();
+                auto center = 0.5 * (left + right);
+                auto length = (left - right).norm();
+
+                auto cp = std::abs(segment->getNormalMomentum() / (length * L3 * tau)) / (0.5 * Rho * V_jet * V_jet);
+                auto cf = std::abs(segment->getTangentMomemtum() / (length * L3 * tau)) / (0.5 * Rho * V_jet * V_jet);
+                Fd += segment->getHorizontalMometum();
+                cp /= numsteps; 
+                cf /= numsteps;
+
+                X.push_back(center.x());
+                Y.push_back(center.y());
+                Cp.push_back(cp);
+                Cf.push_back(cf);
+            }
+        }
+    }
+    Fd /= numsteps;
+    auto Cd = Fd / (0.5 * Rho * V_jet * V_jet * L3 * 2 * Radius);
+    std::cout <<"cd "<<Cd <<std::endl;
+
+    hsize_t local_N {X.size()};
+
+    // Step 1: gather all sizes
+    std::vector<hsize_t> all_sizes(m_run->numprocs);
+    MPI_Allgather(&local_N, 1,  MPI_UNSIGNED_LONG_LONG, all_sizes.data(), 1, MPI_UNSIGNED_LONG_LONG, MPI_COMM_WORLD);
+    hsize_t global_N = std::accumulate(all_sizes.begin(), all_sizes.end(), 0ULL);
+
+    // Step 2: compute offset for this rank
+    hsize_t offset = std::accumulate(all_sizes.begin(), all_sizes.begin() + m_run->myid, 0ULL);
+
+    // Step 3: Create HDF5 file with MPI-IO access
+    hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(plist_id, MPI_COMM_WORLD, MPI_INFO_NULL);
+    hid_t file_id = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+    H5Pclose(plist_id);
+
+    // Step 4: create dataspace and memory space
+    hsize_t dims[1] = { global_N };
+    hid_t filespace = H5Screate_simple(1, dims, NULL);
+    hsize_t count[1] = { local_N };
+    hsize_t start[1] = { offset };
+    hid_t memspace = H5Screate_simple(1, count, NULL);
+
+    // Step 5: Create property list for collective dataset write
+    hid_t plist_xfer = H5Pcreate(H5P_DATASET_XFER);
+    H5Pset_dxpl_mpio(plist_xfer, H5FD_MPIO_COLLECTIVE);
+
+    // Lambda to write a single dataset
+    auto write_dataset = [&](const std::string& name, const std::vector<double>& data) {
+        hid_t dset = H5Dcreate(file_id, name.c_str(), H5T_NATIVE_DOUBLE, filespace,
+                               H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        H5Sselect_hyperslab(filespace, H5S_SELECT_SET, start, NULL, count, NULL);
+        H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, plist_xfer, data.data());
+        H5Dclose(dset);
+    };
+    write_dataset("x", X);
+    write_dataset("y", Y);
+    write_dataset("Cp", Cp);
+    write_dataset("Cf", Cf);
+
+    // Step 6: cleanup
+    H5Pclose(plist_xfer);
+    H5Sclose(filespace);
+    H5Sclose(memspace);
+    H5Fclose(file_id);
 }

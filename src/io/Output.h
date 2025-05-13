@@ -28,6 +28,8 @@ public:
     void WriteAMRmesh(const std::string& filename);
     void WriteAMR2VTK(const std::string &filename);
     void WriteParallelVTSHeader(const std::string &filename, int numprocs, int N1global, int N2global, int N1local, int N2local);
+
+    void WriteForceCoeff(const std::string& filename, const int& numsteps);
 protected:
     Run* m_run {nullptr};
 };

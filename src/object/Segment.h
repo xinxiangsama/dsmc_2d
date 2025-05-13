@@ -17,6 +17,9 @@ using Coord = LargrangianPoint::Coord;
     const Coord& getnormal() const;
     LargrangianPoint*  getleftpoint() const;
     LargrangianPoint*  getrightpoint() const;
+    const double& getNormalMomentum();
+    const double& getTangentMomemtum();
+    const double& getHorizontalMometum(); 
     // Modify
     void setlength(const double& length);
     void setsloop(const Coord& sloop);
@@ -24,10 +27,18 @@ using Coord = LargrangianPoint::Coord;
     void setleftpoint(LargrangianPoint* leftpoint);
     void setrightpoint(LargrangianPoint* rightpoint);
 
+    void clearNormalMomentum();
+    void clearTangentMomemtum();
+    void clearHorizontalMomentum();
+
 protected:
     double m_length;
     LargrangianPoint* m_leftpoint;
     LargrangianPoint* m_rightpoint;
     Coord m_sloop;
     Coord m_normal;
+
+    mutable double normal_momentum {};
+    mutable double tangent_momentum {};
+    mutable double horizontal_momentum {};
 };

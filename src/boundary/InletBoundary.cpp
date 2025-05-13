@@ -18,7 +18,8 @@ void InletBoundary::InjetParticle(std::vector<Particle>& particles)
         double z = L3 * rz;
         auto velocity = randomgenerator->MaxwellDistribution(Vstd);
         velocity(0) += V_jet;
-        particles.emplace_back(mass, Eigen::Vector3d{x, y, z}, velocity);
+        auto Erot = randomgenerator->RotationalenergySample();
+        particles.emplace_back(mass, Eigen::Vector3d{x, y, z}, velocity, Erot);
     }
 
 }

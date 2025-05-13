@@ -14,6 +14,7 @@
 #include "cell/Cell.h"
 #include "object/Circle.h"
 #include "object/Square.h"
+#include "object/Abstract.h"
 
 class Output;
 class Run

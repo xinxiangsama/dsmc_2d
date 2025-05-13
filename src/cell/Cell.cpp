@@ -278,10 +278,10 @@ double Cell::findMaxmfpOverAllchild()
     if(!m_children.empty()){
         double res{-999.0};
         for(auto& child : m_children){
-            auto Maxchild {child->findMaxmfpOverAllchild()};
-            // auto Maxchild = child->getmfp();
+            // auto Maxchild {child->findMaxmfpOverAllchild()};
+            auto Maxchild {child->getmfp()};
             // std::cout << Maxchild << std::endl;
-            res = Maxchild > res ? Maxchild : res;
+            res = std::max(Maxchild, res);
         }
         return res;
     }else{
@@ -332,6 +332,7 @@ void Cell::collision()
         int M_candidate = static_cast<int>(expected_Mcand + Mcand_r);
         Mcand_r = expected_Mcand - M_candidate;
 
+        int local_collision_count {};
         for(int i = 0; i < M_candidate; ++i){
             auto index1 = randomgenerator->getrandomint(0, N_particles - 1);
             auto index2 = randomgenerator->getrandomint(0, N_particles - 1);

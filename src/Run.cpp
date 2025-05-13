@@ -41,8 +41,9 @@ void Run::initialize(int argc, char **argv)
     m_mesh->setnumberCellsYGlobal(N2);
     m_mesh->setnumberCellsZGlobal(N3);
 
-    m_geom = std::make_unique<Circle>(128, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
-    // m_geom = std::make_unique<Square>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    m_geom = std::make_unique<Circle>(256, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    // // m_geom = std::make_unique<Square>(4, LargrangianPoint::Coord{Center_x, Center_y, 0.0}, Radius);
+    // m_geom = std::make_unique<Abstract>();
     m_geom->Initialize();
 
     /*parallel part*/
@@ -70,8 +71,10 @@ void Run::initialize(int argc, char **argv)
     outlet = std::make_unique<OutletBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0));
     // inlet = std::make_unique<WallBoundary>(Eigen::Vector3d(0.0, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(1.0, 0.0, 0.0), ifdisfuse);
     // outlet = std::make_unique<WallBoundary>(Eigen::Vector3d(L1, 0.5 * L2, 0.5 * L3), Eigen::Vector3d(-1.0, 0.0, 0.0), ifdisfuse);
-    wall1 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.0, 0.5 * L3), Eigen::Vector3d(0.0, 1.0, 0.0), ifdisfuse);
-    wall2 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, L2, 0.5 * L3), Eigen::Vector3d(0.0, -1.0, 0.0), ifdisfuse);
+    // wall1 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.0, 0.5 * L3), Eigen::Vector3d(0.0, 1.0, 0.0), true);
+    // wall2 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, L2, 0.5 * L3), Eigen::Vector3d(0.0, -1.0, 0.0), true);
+    wall1 = std::make_unique<OutletBoundary>(Eigen::Vector3d(0.5 * L1, 0.0, 0.5 * L3), Eigen::Vector3d(0.0, 1.0, 0.0));
+    wall2 = std::make_unique<OutletBoundary>(Eigen::Vector3d(0.5 * L1, L2, 0.5 * L3), Eigen::Vector3d(0.0, -1.0, 0.0));
     // wall3 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, 0.0), Eigen::Vector3d(0.0, 0.0, 1.0), ifdisfuse);
     // wall4 = std::make_unique<WallBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, L3), Eigen::Vector3d(0.0, 0.0, -1.0), ifdisfuse);
     wall3 = std::make_unique<PeriodicBoundary>(Eigen::Vector3d(0.5 * L1, 0.5 * L2, 0.0), Eigen::Vector3d(0.0, 0.0, 1.0), 2, L3);
@@ -82,7 +85,7 @@ void Run::initialize(int argc, char **argv)
     /*output part*/
     m_output = std::make_unique<Output>(this);
     /*Initial particle phase*/
-    assignParticle(0.1);
+    assignParticle(1.0);
     for(auto& cell : m_cells){
         cell.allocatevar();
     }
@@ -120,12 +123,13 @@ void Run::assignParticle(const double& coef)
             double x = cell.getposition()(0) + (rx - 0.5) * m_mesh->getUnidX();
             double y = cell.getposition()(1) + (ry - 0.5) * m_mesh->getUnidY();
             double z = cell.getposition()(2) + (rz - 0.5) * m_mesh->getUnidZ();
-            if((x - Center_x) * (x - Center_x) + (y - Center_y) * (y - Center_y) <= 1.5*(Radius * Radius)){
-                continue;
-            }
+            // if((x - Center_x) * (x - Center_x) + (y - Center_y) * (y - Center_y) <= 1.5*(Radius * Radius)){
+            //     continue;
+            // }
             auto velocity = randomgenerator->MaxwellDistribution(Vstd);
             velocity(0) += V_jet;
-            m_particles.emplace_back(mass, Eigen::Vector3d{x, y, z}, velocity);
+            auto Erot = randomgenerator->RotationalenergySample();
+            m_particles.emplace_back(mass, Eigen::Vector3d{x, y, z}, velocity, Erot);
             std::prev(m_particles.end())->setcellID(m_mesh->getIndex(Eigen::Vector3d{x, y, z}));
             cell.insertparticle(&(*std::prev(m_particles.end())));
         }
@@ -134,7 +138,6 @@ void Run::assignParticle(const double& coef)
 
 void Run::particlemove()
 {   
-
     for(auto& cell : m_cells){
         auto particles = cell.getparticles();
         for(auto& particle : particles){
@@ -162,6 +165,7 @@ void Run::particlemove()
             }
             if(wall2->isHit(particle->getposition())){
                 wall2->Reflect(particle, tau);
+                // particle->setvelocity(particle->getvelocity() + Eigen::Vector3d(300, 0, 0));
             }
 
             if(wall3->isHit(particle->getposition())){
@@ -184,7 +188,9 @@ void Run::particlemove()
             //     }
             // }
         }
+
     }
+
 }
 
 void Run::ressignParticle()
@@ -284,7 +290,7 @@ void Run::assignParticle2cell()
 
 void Run::solver()
 {
-    for(size_t iter = 0; iter < 10000; ++iter){
+    for(size_t iter = 0; iter <= 50000; ++iter){
 
             auto t_start = std::chrono::high_resolution_clock::now();
 
@@ -318,22 +324,69 @@ void Run::solver()
             ss << "========================================\n";
             std::cout << ss.str();
         }
-        if (iter % 100 == 0 && iter != 0) {
+        // if(iter % 100 == 0){
+        //     if (myid == 0) {
+        //         std::string filename = "./res/wall_cp_cf_step" + std::to_string(iter) + ".txt";
+        //         std::ofstream ofs(filename);
+            
+        //         ofs << "# x y z Cp Cf\n";
+            
+        //         for(auto& cell : m_cells){
+        //             if(cell.ifcut()){
+        //                 for (auto& segment : cell.getelement()->getsegments()) {
+        //                     auto left = segment->getleftpoint()->getPosition();
+        //                     auto right = segment->getrightpoint()->getPosition();
+        //                     auto center = 0.5 * (left + right);
+        //                     auto length = (left - right).norm();
+            
+        //                     auto cp = (segment->getNormalMomentum() / (length * L3 * tau)) / (0.5 * Rho * V_jet * V_jet);
+        //                     auto cf = (segment->getTangentMomemtum() / (length * L3 * tau)) / (0.5 * Rho * V_jet * V_jet);
+            
+        //                     cp /= 100; 
+        //                     cf /= 100;
+            
+        //                     ofs << center(0) << " " << center(1) << " " << center(2) << " "
+        //                         << cp << " " << cf << "\n";
+        //                 }
+
+        //                 /*==========清空粒子动量变化的统计量=========*/
+        //                 for (auto& segment : cell.getelement()->getsegments()) {
+        //                     segment->clearNormalMomentum();
+        //                     segment->clearTangentMomemtum();
+        //                 }
+        //             }
+        //         }
+            
+        //         ofs.close();
+        //     }
+            
+        // }
+
+        if (iter % 100 == 0) {
             for(auto& cell : m_cells){
                 cell.sample();
-                cell.VTS();
-                cell.genAMRmesh();
+                // cell.VTS();
+                // cell.genAMRmesh();
                 // std::cout << "gen amr done!"<<std::endl;
                 // cell.sortParticle2children();
                 // std::cout << "sort particle to children done!"<<std::endl; //shouldnt be here!
             }
-            // m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
+            m_output->Write2HDF5("./res/step" + std::to_string(iter) + ".h5");
+            m_output->WriteForceCoeff("./res/wall_cp_cf_step" + std::to_string(iter) + ".h5", 100);
+            for(auto& cell : m_cells){
+            /*==========清空粒子动量变化的统计量=========*/
+                for (auto& segment : cell.getelement()->getsegments()) {
+                    segment->clearNormalMomentum();
+                    segment->clearTangentMomemtum();
+                    segment->clearHorizontalMomentum();
+                }
+            }
             // m_output->WriteAMRmesh("./res/step" + std::to_string(iter) +"AMRmesh"+".h5");
-            m_output->Write2VTK("./res/step" + std::to_string(iter));
+            // m_output->Write2VTK("./res/step" + std::to_string(iter));
             // m_output->WriteAMR2VTK("./res/step" + std::to_string(iter) +"AMRmesh");
         }
 
-        // if(iter == 500 || iter == 1000 || iter == 2000 || iter == 4000){
+        // if(iter == 0 || iter == 500 || iter == 1000 || iter == 2000 || iter == 4000){
         //     for(auto& cell : m_cells){
         //         cell.sample();
         //         cell.VTS();

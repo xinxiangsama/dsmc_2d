@@ -15,6 +15,9 @@ public:
     virtual bool isHit(const Particle::Coord& position) const;
 
     virtual void Reflect(Particle* particle, const double& dt) const;
+
+    virtual void resetStatistics() {};
+    virtual void outputStatistics() {};
 protected:
     int numprocs;
 };

@@ -14,6 +14,9 @@ public:
 
     virtual void Reflect(Particle* particle, const double& dt) const;
     virtual const Particle::Coord& getnormal() const override { return m_normal; }
+
+    virtual void resetStatistics() {};
+    virtual void outputStatistics() {};
 protected:
     Particle::Coord m_point;   // a point in boundary
     Particle::Coord m_normal;  // normal

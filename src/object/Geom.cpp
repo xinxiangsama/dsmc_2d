@@ -42,7 +42,7 @@ void Geom::SortSegment2Element(Element *element)
         if(element->getIntersectionPs().size() != 2){
             std::cerr <<"the intersection point num is not as imaged 2 And it's "<<element->getIntersectionPs().size()<<std::endl;
         }else{
-            double esp = 1.0e-3;
+            double esp = 2.0e-3;
             auto& pts = element->getIntersectionPs();
             Eigen::Vector2d p0(Eigen::Vector2d{pts[0]->getPosition().x(), pts[0]->getPosition().y()});
             Eigen::Vector2d p1(Eigen::Vector2d{pts[1]->getPosition().x(), pts[1]->getPosition().y()});

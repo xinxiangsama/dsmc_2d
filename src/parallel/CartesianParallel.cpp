@@ -51,13 +51,14 @@ void CartesianParallel::setNeibours()
 void CartesianParallel::exchangedata()
 {
     MPI_Datatype MPI_Particle;
-    MPI_Type_contiguous(7, MPI_DOUBLE, &MPI_Particle);
+    MPI_Type_contiguous(8, MPI_DOUBLE, &MPI_Particle);
     MPI_Type_commit(&MPI_Particle);
 
     std::vector<ParticleExchangeType> sendbuffer(m_sendbuffer.size());
     auto sendnum = static_cast<int>(m_sendbuffer.size());
     for(size_t i = 0; i < m_sendbuffer.size(); ++i){
         sendbuffer[i].mass = m_sendbuffer[i].getmass();
+        sendbuffer[i].erot = m_sendbuffer[i].getRotationalEnergy();
         sendbuffer[i].x = m_sendbuffer[i].getposition()(0);
         sendbuffer[i].y = m_sendbuffer[i].getposition()(1);
         sendbuffer[i].z = m_sendbuffer[i].getposition()(2);
@@ -92,7 +93,8 @@ void CartesianParallel::exchangedata()
             recvbuffer[i].y < (m_mesh->getnumberCellsY() + m_mesh->getoffsetY()) * m_mesh->getUnidY()){
                 Eigen::Vector3d position(recvbuffer[i].x, recvbuffer[i].y, recvbuffer[i].z);
                 Eigen::Vector3d velocity(recvbuffer[i].u, recvbuffer[i].v, recvbuffer[i].w);
-                m_recvbuffer.emplace_back(mass, position, velocity);
+                auto Erot {recvbuffer[i].erot};
+                m_recvbuffer.emplace_back(mass, position, velocity, Erot);
             }
         }
     }

@@ -21,4 +21,7 @@ public:
     virtual bool isPeriodic() const { return false; }
 
     virtual const Particle::Coord& getnormal() const {}
+
+    virtual void resetStatistics() {};
+    virtual void outputStatistics() {};
 };
