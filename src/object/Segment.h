@@ -46,5 +46,5 @@ protected:
     mutable double tangent_momentum {};
     mutable double horizontal_momentum {};
     mutable double verticle_momentum {};
-    mutable double collisionnum {};
+    mutable int collisionnum {};
 };

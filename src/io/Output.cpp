@@ -340,7 +340,7 @@ void Output::WriteForceCoeff(const std::string &filename, const int& numsteps)
     std::vector<double> X, Y, Z;
     std::vector<double> Cp, Cf, Cq;
     double Fd {}, Fl {};
-    double ObjectCollisionNum {};
+    int ObjectCollisionNum {};
     for(auto& cell : m_run->m_cells){
         if(cell.ifcut()){
             for (auto& segment : cell.getelement()->getsegments()) {

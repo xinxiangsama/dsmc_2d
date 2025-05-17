@@ -47,5 +47,6 @@ Eigen::Vector3d Random::MaxwellDistribution(const double &Vstd)
 
 double Random::RotationalenergySample()
 {
-    return -log(getrandom01()) * boltz * T;
+    // return -log(getrandom01()) * boltz * T;
+    return boltz * T;
 }

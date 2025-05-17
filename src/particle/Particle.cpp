@@ -98,7 +98,7 @@ void Particle::Collision(Particle *other)
        newEtrans = randomgenerator->getrandom01() * Etotal;
        p = pfun(newEtrans);
     }
-    v_rel_mag = sqrt(2 * newEtrans / mass);
+    // v_rel_mag = sqrt(2 * newEtrans / mass);
     auto newErot = Etotal - newEtrans;
 
     auto cosr = 2.0 * randomgenerator->getrandom01() - 1.0;

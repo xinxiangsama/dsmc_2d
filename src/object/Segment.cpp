@@ -58,10 +58,12 @@ void Segment::Reflect(Particle* particle, const double &dt) const
     // 在局部坐标中拼装新速度，然后映射回全局坐标
     Particle::Coord new_velocity = u * m_normal + v * tang1 + w * tang2;
     // Particle::Coord new_velocity = u * m_normal + v * tan1;
+    //=================================================================
     particle->setvelocity(new_velocity);
 
     // auto newErot = -log(randomgenerator->getrandom01()) * boltz * T_wall;
-    // particle->setRotationalEnergy(newErot);
+    auto newErot = boltz * T_wall;
+    particle->setRotationalEnergy(newErot);
     // Update the position of the particle
     auto new_position = hit_position + particle->getvelocity() * abs(dt - t_hit);
     particle->setposition(new_position);

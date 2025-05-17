@@ -362,7 +362,7 @@ void Run::solver()
             
         // }
 
-        if (m_iter % 100 == 0) {
+        if (m_iter % 50 == 0) {
             for(auto& cell : m_cells){
                 cell.sample();
                 // cell.VTS();
@@ -372,7 +372,7 @@ void Run::solver()
                 // std::cout << "sort particle to children done!"<<std::endl; //shouldnt be here!
             }
             m_output->Write2HDF5("./res/step" + std::to_string(m_iter) + ".h5");
-            m_output->WriteForceCoeff("./res/wall_cp_cf_step" + std::to_string(m_iter) + ".h5", 100);
+            m_output->WriteForceCoeff("./res/wall_cp_cf_step" + std::to_string(m_iter) + ".h5", 50);
             for(auto& cell : m_cells){
             /*==========清空粒子动量变化的统计量=========*/
                 for (auto& segment : cell.getelement()->getsegments()) {
